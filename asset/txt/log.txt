@@ -1,0 +1,12 @@
+system log
+
+==============================
+system downloaded.
+error - access denied: entity already exists.
+
+==============================
+system rebooted.
+
+==============================
+system activated.
+check help.

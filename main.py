@@ -1,7 +1,7 @@
 import pygame
 import sys
-from codes.util import DoubleClick, loadImg, loadText, alphaRect, LayeredLooper
-from codes.funcs import lm, lto, dl, cm
+from codes.util import DoubleClick, loadImg, loadText, alphaRect, LayeredLooper, loadImgs
+from codes.funcs import lm, lto, dl, plc, ec, log, ping, msg, cmc
 
 class Game:
     def __init__(self):
@@ -32,6 +32,8 @@ class Game:
             'txt/Tx7y1': loadText('Tx7y1.txt'),
             'txt/2nasHf': loadText('2nasHf.txt'),
             'txt/9o12': loadText('9o12.txt'),
+            'txt/log': loadText('log.txt'),
+            'txt/help': loadText('help.txt'),
 
             'image/lock': pygame.transform.scale(loadImg('lock.png', [0], 2, 1)[0], (55, 55)),
             'image/1aaad4': pygame.image.load('asset/img/1aaad4.png'),
@@ -46,6 +48,8 @@ class Game:
             'image/ka31go': loadImg('pw.png', [3], 3, 2)[0],
             'image/s131p': loadImg('pw.png', [4], 3, 2)[0],
             'image/y30o1': loadImg('pw.png', [5], 3, 2)[0],
+            'image/clock': loadImg('clock.png', range(6), 2, 3),
+            'image/moon': loadImg('moon.png', range(6), 2, 3),
 
             'sfx/locked': pygame.mixer.Sound('asset/sfx/locked.wav'),
             'sfx/open': pygame.mixer.Sound('asset/sfx/open.wav'),
@@ -53,22 +57,27 @@ class Game:
             'sfx/bass': pygame.mixer.Sound('asset/sfx/bass.wav'),
             'sfx/c': pygame.mixer.Sound('asset/sfx/c.wav'),
             'sfx/tick': pygame.mixer.Sound('asset/sfx/tick.wav'),
+            'sfx/ominous': pygame.mixer.Sound('asset/sfx/ominous.wav'),
+            'sfx/reboot': pygame.mixer.Sound('asset/sfx/reboot.wav'),
         }
         self.asset['lock'].set_alpha(185)
         self.asset['sfx/bass'].set_volume(0.25)
         self.asset['sfx/c'].set_volume(0.5)
         self.asset['sfx/tick'].set_volume(0.05)
+        for i in range(len(loadImgs('wire'))):
+            self.asset['image/light' + str(i)] = loadImgs('wire')[i]
 
-        self.crack_channels = [pygame.mixer.Channel(i) for i in range(1, 16)]
+        self.crack_channels = [pygame.mixer.Channel(i) for i in range(2, 17)]
         self.crack_loop = LayeredLooper(self.asset['sfx/crack'], self.crack_channels, interval_ms=1500, fade_ms=150)
-        self.c_channels = [pygame.mixer.Channel(i) for i in range(16, 40)]
+        self.c_channels = [pygame.mixer.Channel(i) for i in range(17, 41)]
         self.c_loop = LayeredLooper(self.asset['sfx/c'], self.c_channels, interval_ms=13)
-        self.bgm_channel = pygame.mixer.Channel(0)
+        self.bgm_channel = pygame.mixer.Channel(1)
         self.bgm_playing = False
 
         self.font = pygame.font.Font('asset/font/OCR-B.ttf', 7)
         self.font2 = pygame.font.Font('asset/font/OCR-B.ttf', 10)
         self.font3 = pygame.font.Font('asset/font/OCR-B.ttf', 35)
+        self.font4 = pygame.font.Font('asset/font/ChicagoFLF.ttf', 10)
 
         self.directories = []
         self.images = []
@@ -76,10 +85,12 @@ class Game:
         self.etcs = []
         self.windows = []
 
-        self.map = 0
+        self.map = 1
         self.light = True
 
         pygame.mouse.set_visible(False)
+
+        self.console = None
 
     def loadmap(self): lm(self)
 
@@ -87,13 +98,24 @@ class Game:
 
     def download(self, name): dl(self, name)
 
-    def clearMap(self): cm(self)
+    def padLockClear(self): plc(self)
+
+    def ensureConsole(self): return ec(self)
+
+    def log(self, target): log(self, target)
+
+    def ping(self, target): ping(self, target)
+
+    def msg(self, target): msg(self, target)
+
+    def checkMoonClock(self): cmc(self)
 
     def main(self):
         while True:
-            if type(self.map) == int: self.loadmap(); self.map = (self.map, )
+            if type(self.map) == int: self.loadmap(); self.map = (self.map, )#; self.asset['sfx/reboot'].play()
             if self.map[0] == 0:
                 if not self.light: self.asset['Tx7y1'] = loadText('Tx7y1_.txt')
+            if self.map[0] == 1: self.checkMoonClock()
 
             self.FPSCLOCK.tick(60)
             self.screen.fill((10, 15, 22))

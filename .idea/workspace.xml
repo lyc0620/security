@@ -5,31 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="87ed623d-325a-4da5-b72b-43df2ad9410c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Security.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/sfx/bass.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/sfx/crack.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/sfx/open.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/2nasHf.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/9o12.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/L3I1l7.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/Tx7y1.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/Tx7y1_.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/empty1.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/empty2.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/empty3.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/empty4.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/readme.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/codes/funcs.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/codes/object.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/codes/util.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/temp.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/asset/sfx/ominous.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/asset/sfx/reboot.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/asset/txt/help.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/asset/txt/log.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/asset/img/wire.png" beforeDir="false" afterPath="$PROJECT_DIR$/asset/img/wire.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/asset/txt/2nasHf.txt" beforeDir="false" afterPath="$PROJECT_DIR$/asset/txt/2nasHf.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bgm gpt.wav" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/codes/funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/codes/funcs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/codes/object.py" beforeDir="false" afterPath="$PROJECT_DIR$/codes/object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/codes/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/codes/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/temp.py" beforeDir="false" afterPath="$PROJECT_DIR$/temp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,6 +34,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;lyc0620&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/lyc0620/security.git&quot;,
+    &quot;accountId&quot;: &quot;d7a51daf-8588-47ec-8d01-2116f831c9dc&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
 }</component>
@@ -60,14 +60,16 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Python.funcs.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;Python.object.executor&quot;: &quot;Run&quot;,
     &quot;Python.temp.executor&quot;: &quot;Run&quot;,
     &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.util.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/PC/Desktop/codes/Security/asset/sfx&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -112,17 +114,72 @@
       <workItem from="1755094708922" duration="969000" />
       <workItem from="1755129558866" duration="16603000" />
       <workItem from="1755172799470" duration="9075000" />
-      <workItem from="1755227913385" duration="541000" />
+      <workItem from="1755227913385" duration="11781000" />
+      <workItem from="1755262870741" duration="4000" />
+      <workItem from="1755267676780" duration="1284000" />
+      <workItem from="1755270365710" duration="2853000" />
+      <workItem from="1755311454050" duration="14123000" />
+      <workItem from="1755348588686" duration="4063000" />
+      <workItem from="1755411811564" duration="597000" />
+      <workItem from="1755416699864" duration="3020000" />
+      <workItem from="1755432155589" duration="6000" />
+      <workItem from="1755432252515" duration="9968000" />
+      <workItem from="1755479871194" duration="5625000" />
+      <workItem from="1755501668607" duration="13922000" />
+      <workItem from="1755527688818" duration="1292000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/codes/object.py</url>
+          <line>146</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/codes/object.py</url>
+          <line>225</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/codes/object.py</url>
+          <line>74</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/codes/object.py</url>
+          <line>37</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/codes/object.py</url>
+          <line>178</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/codes/object.py</url>
+          <line>365</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/codes/object.py</url>
+          <line>428</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Security$object.coverage" NAME="object Coverage Results" MODIFIED="1755179470749" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
-    <SUITE FILE_PATH="coverage/Security$temp.coverage" NAME="temp Coverage Results" MODIFIED="1755163162321" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Security$main.coverage" NAME="main Coverage Results" MODIFIED="1755227991919" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Security$object.coverage" NAME="object Coverage Results" MODIFIED="1755516084631" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
+    <SUITE FILE_PATH="coverage/Security$temp.coverage" NAME="temp Coverage Results" MODIFIED="1755501861889" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Security$util.coverage" NAME="util Coverage Results" MODIFIED="1755416774013" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
+    <SUITE FILE_PATH="coverage/Security$main.coverage" NAME="main Coverage Results" MODIFIED="1755528987498" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Security$test.coverage" NAME="test Coverage Results" MODIFIED="1754896503719" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Security$funcs.coverage" NAME="funcs Coverage Results" MODIFIED="1755331284254" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
   </component>
 </project>

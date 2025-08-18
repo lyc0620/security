@@ -170,6 +170,46 @@ class LockWindow(ImgWindow):
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             self.rect.x = event.pos[0] - self._drag_off[0]
             self.rect.y = event.pos[1] - self._drag_off[1]
+class InteractiveImgWindow(ImgWindow):
+    def __init__(self, file, game, size, img):
+        super().__init__(file, game, size, img)
+        self.index = 0
+        self.image = self.img[self.index]
+
+    def update(self, event):
+        self.image = self.image = self.img[self.index]
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if not self.is_top(event.pos):
+                return
+
+        if self.file is not None:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.close_rect.collidepoint(event.pos):
+                    self.file.open = False
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                    return
+                if self.titlebar_rect.collidepoint(event.pos):
+                    self.dragging = True
+                    self._drag_off = (event.pos[0] - self.rect.x, event.pos[1] - self.rect.y)
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                        self.game.windows.append(self)
+                if self.rect.collidepoint(event.pos):
+                    self.index = (self.index + 1) % len(self.img)
+                    self.game.asset['sfx/tick'].play()
+
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                self.dragging = False
+
+            elif event.type == pygame.MOUSEMOTION and self.dragging:
+                self.rect.x = event.pos[0] - self._drag_off[0]
+                self.rect.y = event.pos[1] - self._drag_off[1]
+
+    def render(self):
+        Window.render(self)
+        self.game.screen.blit(self.image, self.rect)
 
 class LockerWindow(Window):
     def __init__(self, file, game, size, password):
@@ -248,14 +288,6 @@ class LoaderWindow(Window):
         if self.comment: return pygame.Rect(self.rect.x + 20, self.rect.y + 30, self.size[0] - 40, 20)
         else: return pygame.Rect(self.rect.x + 20, self.rect.y + 10, self.size[0] - 40, 20)
 
-    # def update(self, event):
-    #     super().update(event)
-    #     if self.load >= self.size[0] - 40:
-    #         for w in self.game.windows:
-    #             if w == self:
-    #                 self.game.windows.remove(w); self.game.download(self.file); break
-    #     else: self.load += random.randrange(self.spd[0], self.spd[1])
-
     def render(self):
         super().render()
         pygame.draw.rect(self.game.screen, (170, 170, 185), self.loader_rect)
@@ -282,7 +314,7 @@ class PadLockWindow(Window):
     def check(self):
         if self.on == self.target_on:
             self.game.asset['sfx/open'].play()
-            self.game.clearMap()
+            self.game.padLockClear()
             self.file.open = False
             if self in self.game.windows: self.game.windows.remove(self)
 
@@ -307,6 +339,147 @@ class PadLockWindow(Window):
                 base = '#DFFFFF' if self.on[r][c] else '#CFCFCF'
                 pygame.draw.rect(self.game.screen, base, rect, border_radius=6)
                 pygame.draw.rect(self.game.screen, CLR_BORDER, rect, 2, border_radius=6)
+
+class CommandWindow(Window):
+    def __init__(self, file, game):
+        super().__init__(file, game, (200, 140))
+        self.commands = {'log': self.game.log,
+                         'ping': self.game.ping,
+                         'msg': self.game.msg}
+        self.command = 0
+        self.cmd = list(self.commands.values())[self.command]
+        self.targets = ['root', 'L□■■f□r', 'Edward']
+        self.target = 0
+
+    @property
+    def commandRect(self):
+        return [pygame.Rect(self.rect.x + 15, self.rect.y + 15 + 30 * i, 70, 20) for i in range(3)]
+
+    @property
+    def buttonRect(self):
+        return pygame.Rect(self.rect.x + 65, self.rect.y + self.rect.h - 35, 70, 20)
+
+    @property
+    def targetRect(self):
+        return [pygame.Rect(self.rect.x + 115, self.rect.y + 15 + 30 * i, 70, 20) for i in range(3)]
+
+    def update(self, event):
+        self.cmd = list(self.commands.values())[self.command]
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if not self.is_top(event.pos):
+                return
+
+        if self.file is not None:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.close_rect.collidepoint(event.pos):
+                    self.file.open = False
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                    return
+                if self.titlebar_rect.collidepoint(event.pos):
+                    self.dragging = True
+                    self._drag_off = (event.pos[0] - self.rect.x, event.pos[1] - self.rect.y)
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                        self.game.windows.append(self)
+                for i in range(len(self.commandRect)):
+                    if self.commandRect[i].collidepoint(event.pos): self.command = i; self.game.asset['sfx/tick'].play()
+                for i in range(len(self.targetRect)):
+                    if self.targetRect[i].collidepoint(event.pos): self.target = i; self.game.asset['sfx/tick'].play()
+                if self.buttonRect.collidepoint(event.pos): self.cmd(self.targets[self.target]); self.game.asset['sfx/tick'].play()
+
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                self.dragging = False
+
+            elif event.type == pygame.MOUSEMOTION and self.dragging:
+                self.rect.x = event.pos[0] - self._drag_off[0]
+                self.rect.y = event.pos[1] - self._drag_off[1]
+
+    def render(self):
+        super().render()
+        for i in range(len(self.commandRect)):
+            if i == self.command: pygame.draw.rect(self.game.screen, CLR_CLOSE, self.commandRect[i])
+            else: pygame.draw.rect(self.game.screen, CLR_BORDER, self.commandRect[i])
+            text = self.game.font4.render(list(self.commands.keys())[i], False, (10, 15, 22))
+            x = self.commandRect[i].x + (self.commandRect[i].w - self.game.font4.size(list(self.commands.keys())[i])[0]) // 2
+            y = self.commandRect[i].y + (self.commandRect[i].h - self.game.font4.size(list(self.commands.keys())[i])[1]) // 2
+            self.game.screen.blit(text, (x, y))
+        for i in range(len(self.targetRect)):
+            if i == self.target: pygame.draw.rect(self.game.screen, CLR_CLOSE, self.targetRect[i])
+            else: pygame.draw.rect(self.game.screen, CLR_BORDER, self.targetRect[i])
+            text = self.game.font4.render(self.targets[i], False, (10, 15, 22))
+            x = self.targetRect[i].x + (self.targetRect[i].w - self.game.font4.size(self.targets[i])[0]) // 2
+            y = self.targetRect[i].y + (self.targetRect[i].h - self.game.font4.size(self.targets[i])[1]) // 2
+            self.game.screen.blit(text, (x, y))
+        pygame.draw.rect(self.game.screen, CLR_CLOSE, self.buttonRect)
+        text = self.game.font4.render('run', False, (10, 15, 22))
+        x = self.buttonRect.x + (self.buttonRect.w - self.game.font4.size('run')[0]) // 2
+        y = self.buttonRect.y + (self.buttonRect.h - self.game.font4.size('run')[1]) // 2
+        self.game.screen.blit(text, (x, y))
+
+class ConsoleWindow(Window):
+    def __init__(self, file, game, size=(280, 160), max_lines=200):
+        super().__init__(file, game, size)
+        self.lines = []
+        self.max_lines = max_lines
+        self.line_h = game.font2.get_height() + 2
+        self.scroll = 0
+
+    def update(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if not self.is_top(event.pos):
+                return
+
+        if self.file is not None:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.close_rect.collidepoint(event.pos):
+                    self.file.open = False
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                    return
+                if self.titlebar_rect.collidepoint(event.pos):
+                    self.dragging = True
+                    self._drag_off = (event.pos[0] - self.rect.x, event.pos[1] - self.rect.y)
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                        self.game.windows.append(self)
+
+            elif event.type == pygame.MOUSEWHEEL:
+                self.scroll += event.y
+
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                self.dragging = False
+
+            elif event.type == pygame.MOUSEMOTION and self.dragging:
+                self.rect.x = event.pos[0] - self._drag_off[0]
+                self.rect.y = event.pos[1] - self._drag_off[1]
+
+    def add_line(self, s: str):
+        max_w = self.rect.w - 10
+        words = s.split(' ')
+        cur = ""
+        for w in words:
+            test = (cur + " " + w).strip()
+            if self.game.font2.size(test)[0] <= max_w:
+                cur = test
+            else:
+                self.lines.append(cur)
+                cur = w
+        if cur:
+            self.lines.append(cur)
+        if len(self.lines) > self.max_lines:
+            over = len(self.lines) - self.max_lines
+            self.lines = self.lines[over:]
+
+    def render(self):
+        super().render()
+        visible_rows = self.rect.h // self.line_h
+        start = max(0, len(self.lines) - visible_rows - self.scroll)
+        end   = start + visible_rows
+        for i, line in enumerate(self.lines[start:end]):
+            surf = self.game.font2.render(line, True, (10,15,22))
+            self.game.screen.blit(surf, (self.rect.x + 5, self.rect.y + 5 + i*self.line_h))
 
 
 
@@ -425,7 +598,8 @@ class Image(File):
         self.game = game
         self.name = name
         self.image = self.game.asset['image/' + self.name]
-        size = self.image.get_size()
+        try: size = self.image.get_size()
+        except AttributeError: size = self.image[0].get_size()
         super().__init__(game, name, pos, 'image', interaction, size, child)
         self.window = ImgWindow(self, self.game, size, self.image)
 class TransparentImg(Image):
@@ -438,6 +612,10 @@ class LockImg(Image):
         self.window = LockWindow(self, self.game, self.image.get_size(), self.image)
         self.objType = 'lock'
         self.icon = self.game.asset['icon/etc']
+class InteractiveImg(Image):
+    def __init__(self, game, name, pos, interaction, child = False):
+        super().__init__(game, name, pos, interaction, child)
+        self.window = InteractiveImgWindow(self, self.game, self.size, self.image)
 
 class Locker(File):
     def __init__(self, game, name, pos, password, interaction, child=False):
@@ -454,12 +632,12 @@ class Sys(File):
         super().__init__(game, name, pos, 'sys', interaction, child=child)
         self.window = LoaderWindow(self, self.game)
 
-class Reboot(File):
-    def __init__(self, game, name, pos, interaction, child = False):
+class PadLock(File):
+    def __init__(self, game, name, pos, interaction, target, child = False):
         super().__init__(game, name, pos, '', interaction, (100, 100), child)
-        target = [
-            [1, 0, 0, 1, 1, 0],
-            [0, 1, 0, 1, 0, 0],
-            [1, 0, 0, 0, 0, 0]
-        ]
         self.window = PadLockWindow(self, self.game, target)
+
+class Command(File):
+    def __init__(self, game, name, pos, interaction, child = False):
+        super().__init__(game, name, pos, 'command', interaction, child=child)
+        self.window = CommandWindow(self, self.game)

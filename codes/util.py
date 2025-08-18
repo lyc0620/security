@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 
 BASE_IMG_PATH = 'asset/img/'
 BASE_TEXT_PATH = 'asset/txt/'
@@ -149,3 +150,11 @@ class LayeredLooper:
         jitter = random.randint(-self.jitter_ms, self.jitter_ms)
         self._next_tick = now + max(50, self.interval_ms + jitter)
 
+def loadImgs(path):
+    images = []
+    for img_name in sorted(os.listdir(BASE_IMG_PATH + path)):
+        images.append(pygame.image.load(BASE_IMG_PATH + path + '/' + img_name))
+    return images
+
+
+if __name__ == '__main__': print(rgbToHex((10, 15, 22)))
