@@ -1,20 +1,10 @@
 import pygame
 import random
 from codes.util import loadText
-import math
 
 CLR_BODY   = pygame.Color("#a6b5d6")
 CLR_BORDER = pygame.Color("#7e8dae")
 CLR_CLOSE  = pygame.Color("#667596")
-CLR_DARK = pygame.Color("#0A0F16")
-
-ICON_SIZE = 32
-LABEL_MAX_W = 42
-LABEL_LINE_GAP = 1
-FILE_CELL_W = 58
-FILE_CELL_H = 62
-DIR_PAD_X = 25
-DIR_PAD_Y = 16
 
 EXT_BY_TYPE = {
     'image': '.png',
@@ -22,65 +12,18 @@ EXT_BY_TYPE = {
     'locker': '.lock',
     'sys': '.exe',
     'command': '.exe',
-    'lock': '.lock',
+    'lock': '.png',
     '': '.lock',
+}
+EXT_BY_NAME = {
+    'log': '.log',
+    'cmd': '.exe',
 }
 
 
 def display_name(name, obj_type):
-    ext = EXT_BY_TYPE.get(obj_type, '')
+    ext = EXT_BY_NAME.get(name, EXT_BY_TYPE.get(obj_type, ''))
     return name if not ext or name.endswith(ext) else name + ext
-
-
-def truncate_to_width(font, text, max_w):
-    if font.size(text)[0] <= max_w:
-        return text
-    _ellipsis = '...'
-    while text and font.size(text + _ellipsis)[0] > max_w:
-        text = text[:-1]
-    return text + _ellipsis if text else _ellipsis
-
-
-def wrap_label(font, text, max_w=LABEL_MAX_W, max_lines=2):
-    if font.size(text)[0] <= max_w:
-        return [text]
-
-    parts = text.split('.')
-    candidates = []
-    if len(parts) > 1:
-        candidates.append((text[:-(len(parts[-1]) + 1)], '.' + parts[-1]))
-
-    for i in range(1, len(text)):
-        candidates.append((text[:i], text[i:]))
-
-    best = None
-    best_score = None
-    for left, right in candidates:
-        if not left or not right:
-            continue
-        lw = font.size(left)[0]
-        rw = font.size(right)[0]
-        overflow = max(0, lw - max_w) + max(0, rw - max_w)
-        balance = abs(lw - rw)
-        score = (overflow, balance)
-        if best_score is None or score < best_score:
-            best = (left, right)
-            best_score = score
-            if overflow == 0 and balance <= 6:
-                break
-
-    if best is None:
-        return [truncate_to_width(font, text, max_w)]
-
-    lines = [truncate_to_width(font, best[0], max_w), truncate_to_width(font, best[1], max_w)]
-    return lines[:max_lines]
-
-
-def directory_auto_size(files, min_size=(100, 70)):
-    if not files: return min_size
-    max_x = max(f.ref_pos[0] + FILE_CELL_W for f in files) + DIR_PAD_X
-    max_y = max(f.ref_pos[1] + FILE_CELL_H for f in files) + DIR_PAD_Y
-    return max(min_size[0], max_x), max(min_size[1], max_y)
 
 
 class Window:
@@ -149,7 +92,8 @@ class DirWindow(Window):
 
     def update(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if not self.is_top(event.pos): return
+            if not self.is_top(event.pos):
+                return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.close_rect.collidepoint(event.pos):
@@ -251,7 +195,7 @@ class InteractiveImgWindow(ImgWindow):
         self.image = self.img[self.index]
 
     def update(self, event):
-        self.image = self.img[self.index]
+        self.image = self.image = self.img[self.index]
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if not self.is_top(event.pos):
@@ -284,130 +228,6 @@ class InteractiveImgWindow(ImgWindow):
     def render(self):
         Window.render(self)
         self.game.screen.blit(self.image, self.rect)
-class PhaseWindow(ImgWindow):
-    def __init__(self, file, game, size, img):
-        super().__init__(file, game, size, img)
-        self.phase = 0
-        self.phases = [0, 1, 2, 3, 4, 5, 0]
-        self.dates = [
-            '19.01.02',
-            '19.01.06',
-            '19.01.09',
-            '19.01.15',
-            '19.01.21',
-            '19.01.26',
-            '19.01.30',
-        ]
-        self.index = self.phases[self.phase]
-        self.image = self.img[self.index]
-
-    def update(self, event):
-        super().update(event)
-
-        width = self.game.screen.get_width()
-        max_x = max(1, width - self.rect.w)
-        x = max(0, min(self.rect.x, max_x))
-
-        self.phase = round(x / max_x * (len(self.phases) - 1))
-        self.index = self.phases[self.phase]
-        self.image = self.img[self.index]
-
-    def render(self):
-        Window.render(self)
-        self.game.screen.blit(self.image, self.rect)
-
-        date = self.game.font2.render(self.dates[self.phase], False, CLR_BORDER)
-        self.game.screen.blit(date, (self.rect.x + 5, self.rect.bottom - 12))
-
-class ClockWindow(Window):
-    def __init__(self, file, game, size=(150, 150)):
-        super().__init__(file, game, size)
-        self.hour = 0
-        self.minute = 0
-
-    def update(self, event):
-        super().update(event)
-
-        if self.file is None: return
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self not in self.game.windows: return
-            if not self.is_top(event.pos): return
-            if not self.rect.collidepoint(event.pos): return
-
-            if event.button == 1:
-                self.hour = (self.hour + 1) % 12
-                self.game.asset['sfx/tick'].play()
-
-            elif event.button == 3:
-                self.minute += 5
-                if self.minute >= 60:
-                    self.minute %= 60
-                    self.hour = (self.hour + 1) % 12
-                self.game.asset['sfx/tick'].play()
-
-    def render(self):
-        super().render()
-
-        cx = self.rect.x + self.rect.w // 2
-        cy = self.rect.y + self.rect.h // 2
-        radius = min(self.rect.w, self.rect.h) // 2 - 14
-
-        pygame.draw.rect(self.game.screen, CLR_DARK, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
-
-        for i in range(60):
-            angle = math.radians(i * 6 - 90)
-            outer_x = cx + math.cos(angle) * radius
-            outer_y = cy + math.sin(angle) * radius
-
-            if i % 5 == 0:
-                inner = radius - 10
-                width = 2
-                color = CLR_DARK
-            else:
-                inner = radius - 5
-                width = 1
-                color = CLR_BORDER
-
-            inner_x = cx + math.cos(angle) * inner
-            inner_y = cy + math.sin(angle) * inner
-
-            pygame.draw.line(
-                self.game.screen,
-                color,
-                (inner_x, inner_y),
-                (outer_x, outer_y),
-                width
-            )
-
-        for num, pos in [('12', 0), ('3', 3), ('6', 6), ('9', 9)]:
-            angle = math.radians(pos * 30 - 90)
-            text = self.game.font2.render(num, True, CLR_DARK)
-            tx = cx + math.cos(angle) * (radius - 24) - text.get_width() // 2
-            ty = cy + math.sin(angle) * (radius - 24) - text.get_height() // 2
-            self.game.screen.blit(text, (tx, ty))
-
-        minute_angle = math.radians(self.minute * 6 - 90)
-        hour_angle = math.radians(((self.hour % 12) + self.minute / 60) * 30 - 90)
-
-        hour_len = radius * 0.45
-        minute_len = radius * 0.68
-
-        hx = cx + math.cos(hour_angle) * hour_len
-        hy = cy + math.sin(hour_angle) * hour_len
-        mx = cx + math.cos(minute_angle) * minute_len
-        my = cy + math.sin(minute_angle) * minute_len
-
-        pygame.draw.line(self.game.screen, CLR_BORDER, (cx, cy), (hx, hy), 5)
-        pygame.draw.line(self.game.screen, CLR_BORDER, (cx, cy), (mx, my), 3)
-        pygame.draw.circle(self.game.screen, CLR_BORDER, (cx, cy), 5)
-
-        time_text = '{:02d}:{:02d}'.format(self.hour if self.hour != 0 else 12, self.minute)
-        surf = self.game.font.render(time_text, True, CLR_BORDER)
-        self.game.screen.blit(
-            surf,
-            (cx - surf.get_width() // 2, self.rect.bottom - 12)
-        )
 
 class LockerWindow(Window):
     def __init__(self, file, game, size, password):
@@ -494,16 +314,14 @@ class LoaderWindow(Window):
             text = self.game.font.render(self.comment, True, (10, 15, 22))
             self.game.screen.blit(text, (self.loader_rect.x, self.loader_rect.y - 20))
 
+
 class SystemRebootWindow(Window):
-    def __init__(self, file, game, size=(360, 170), interval_ms=360, end_delay_ms=900, blackout_ms=13500):
+    def __init__(self, file, game, size=(360, 170), interval_ms=360, end_delay_ms=900):
         super().__init__(file, game, size)
         self.rect.topleft = (270, 240)
         self.interval_ms = interval_ms
         self.end_delay_ms = end_delay_ms
-        self.blackout_ms = blackout_ms
         self.elapsed = 0
-        self.blackout_elapsed = 0
-        self.phase = 'console'
         self.lines = []
         self.all_lines = [
             '$ sysctl reboot --safe',
@@ -514,42 +332,26 @@ class SystemRebootWindow(Window):
             '[sys] kernel handoff: ok',
             '[sys] system rebooting...',
         ]
+        self.game.suppress_bgm = True
         self.game.bgm_playing = False
-        self.game.suppress_bgm = False
+        pygame.mixer.stop()
+        self.game.asset['sfx/reboot'].play()
 
     def tick(self, dt):
-        if self.phase == 'console':
-            self.elapsed += dt
-            target_count = min(len(self.all_lines), self.elapsed // self.interval_ms + 1)
-            while len(self.lines) < target_count:
-                self.lines.append(self.all_lines[len(self.lines)])
-                self.game.asset['sfx/tick'].play()
-
-            if self.elapsed >= len(self.all_lines) * self.interval_ms + self.end_delay_ms:
-                self.phase = 'blackout'
-                self.game.suppress_bgm = False
-                self.game.bgm_playing = True
-                self.blackout_elapsed = 0
-                self.game.asset['sfx/ominous'].play()
-
-        elif self.phase == 'blackout':
-            self.blackout_elapsed += dt
-            if self.blackout_ms - 3500 >= self.blackout_elapsed >= self.blackout_ms - 6500:
-                pygame.mixer.stop()
-                self.game.asset['sfx/reboot'].play()
-                self.game.light = True
-            if self.blackout_elapsed >= self.blackout_ms:
-                self.game.suppress_bgm = False
-                self.game.bgm_playing = False
-                self.game.map = 1
-                if self in self.game.windows:
-                    self.game.windows.remove(self)
+        self.elapsed += dt
+        target_count = min(len(self.all_lines), self.elapsed // self.interval_ms + 1)
+        while len(self.lines) < target_count:
+            self.lines.append(self.all_lines[len(self.lines)])
+            self.game.asset['sfx/tick'].play()
+        if self.elapsed >= len(self.all_lines) * self.interval_ms + self.end_delay_ms:
+            self.game.light = True
+            self.game.suppress_bgm = False
+            self.game.bgm_playing = False
+            self.game.map = 1
+            if self in self.game.windows:
+                self.game.windows.remove(self)
 
     def render(self):
-        if self.phase == 'blackout':
-            self.game.screen.fill((8, 12, 18))
-            return
-
         self.game.screen.fill((0, 0, 0))
         pygame.draw.rect(self.game.screen, (8, 12, 18), self.rect)
         pygame.draw.rect(self.game.screen, CLR_BORDER, (self.rect.x - 2, self.rect.y - 10, self.rect.w + 4, self.rect.h + 12), 2)
@@ -602,162 +404,6 @@ class PadLockWindow(Window):
                 base = '#DFFFFF' if self.on[r][c] else '#CFCFCF'
                 pygame.draw.rect(self.game.screen, base, rect, border_radius=6)
                 pygame.draw.rect(self.game.screen, CLR_BORDER, rect, 2, border_radius=6)
-
-class RotorWindow(Window):
-    def __init__(self, file, game):
-        super().__init__(file, game, (300, 190))
-        self.left = 0
-        self.right = 0
-        self.cipher = ''
-        self.output = ''
-        self.active = True
-        self.max_len = 8
-        self.history = []
-
-    @property
-    def left_rotor_rect(self): return pygame.Rect(self.rect.x + 65, self.rect.y + 46, 46, 38)
-
-    @property
-    def right_rotor_rect(self): return pygame.Rect(self.rect.x + 190, self.rect.y + 46, 46, 38)
-
-    @property
-    def input_rect(self): return pygame.Rect(self.rect.x + 34, self.rect.y + 112, 232, 24)
-
-    @property
-    def output_rect(self): return pygame.Rect(self.rect.x + 34, self.rect.y + 152, 232, 24)
-
-    def advance(self):
-        self.right = (self.right + 1) % 10
-        if self.right == 0: self.left = (self.left + 1) % 10
-
-    def decode_digit(self, ch):
-        prev_left = self.left
-        prev_right = self.right
-
-        c = int(ch)
-        p = (c - self.left - self.right) % 10
-
-        self.cipher += ch; self.output += str(p)
-        self.history.append((prev_left, prev_right, ch, str(p)))
-
-        self.advance()
-
-    def backspace(self):
-        if not self.history: return
-
-        prev_left, prev_right, ch, p = self.history.pop()
-        self.left = prev_left
-        self.right = prev_right
-        self.cipher = self.cipher[:-1]
-        self.output = self.output[:-1]
-
-    def clear(self):
-        self.cipher = ''; self.output = ''
-        self.history.clear()
-
-    def update_rotor_by_click(self, rect, attr, event):
-        if not rect.collidepoint(event.pos): return False
-
-        if event.button == 1:
-            setattr(self, attr, (getattr(self, attr) + 1) % 10)
-            self.game.asset['sfx/tick'].play()
-            return True
-
-        if event.button == 3:
-            setattr(self, attr, (getattr(self, attr) - 1) % 10)
-            self.game.asset['sfx/tick'].play()
-            return True
-
-        return False
-
-    def update(self, event):
-        super().update(event)
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if not self.is_top(event.pos): return
-            if self.close_rect.collidepoint(event.pos) or self.titlebar_rect.collidepoint(event.pos): return
-            if self.update_rotor_by_click(self.left_rotor_rect, 'left', event): return
-            if self.update_rotor_by_click(self.right_rotor_rect, 'right', event): return
-
-            if event.button == 1:
-                self.active = self.input_rect.collidepoint(event.pos)
-
-        elif event.type == pygame.KEYDOWN and self.active:
-            if event.key == pygame.K_BACKSPACE:
-                self.backspace()
-                self.game.asset['sfx/tick'].play()
-
-            elif event.key == pygame.K_ESCAPE or event.key == pygame.K_DELETE:
-                self.clear()
-                self.game.asset['sfx/tick'].play()
-
-            elif event.unicode.isdigit() and len(self.cipher) < self.max_len:
-                self.decode_digit(event.unicode)
-                self.game.asset['sfx/tick'].play()
-
-    def draw_digit_box(self, rect, value, label):
-        bg = (230, 235, 245)
-        fg = (10, 15, 22)
-
-        label_surf = self.game.font.render(label, True, fg)
-        self.game.screen.blit(
-            label_surf,
-            (
-                rect.centerx - label_surf.get_width() // 2,
-                rect.y - 13
-            )
-        )
-
-        pygame.draw.rect(self.game.screen, bg, rect)
-        pygame.draw.rect(self.game.screen, CLR_BORDER, rect, 2)
-
-        value_surf = self.game.font3.render(str(value), True, fg)
-        self.game.screen.blit(
-            value_surf,
-            (
-                rect.centerx - value_surf.get_width() // 2,
-                rect.centery - value_surf.get_height() // 2 - 1
-            )
-        )
-
-    def draw_text_field(self, rect, label, text, active=False):
-        fg = (10, 15, 22)
-
-        label_surf = self.game.font.render(label, True, fg)
-        self.game.screen.blit(label_surf, (rect.x, rect.y - 12))
-
-        pygame.draw.rect(self.game.screen, (230, 235, 245), rect)
-        pygame.draw.rect(self.game.screen, CLR_BORDER, rect, 2)
-
-        shown = text
-        if active and pygame.time.get_ticks() // 400 % 2 == 0:
-            shown += '_'
-
-        surf = self.game.font2.render(shown, True, fg)
-        self.game.screen.blit(surf, (rect.x + 6, rect.y + 6))
-
-    def render(self):
-        super().render()
-
-        fg = (10, 15, 22)
-
-        title = self.game.font2.render('AUTH ROTOR', True, fg)
-        self.game.screen.blit(title, (self.rect.x + 10, self.rect.y + 8))
-
-        self.draw_digit_box(self.left_rotor_rect, self.left, 'L rotor')
-        self.draw_digit_box(self.right_rotor_rect, self.right, 'R rotor')
-
-        arrow = self.game.font2.render(':::', True, fg)
-        self.game.screen.blit(
-            arrow,
-            (
-                self.rect.centerx - arrow.get_width() // 2,
-                self.left_rotor_rect.centery - arrow.get_height() // 2
-            )
-        )
-
-        self.draw_text_field(self.input_rect, 'cipher input', self.cipher, self.active)
-        self.draw_text_field(self.output_rect, 'live output', self.output, False)
 
 class CommandWindow(Window):
     def __init__(self, file, game):
@@ -838,153 +484,67 @@ class CommandWindow(Window):
         self.game.screen.blit(text, (x, y))
 
 class ConsoleWindow(Window):
- def __init__(self, file, game, size=(280, 160), max_lines=200):
-  super().__init__(file, game, size)
-  self.lines = []
-  self.max_lines = max_lines
-  self.line_h = game.font2.get_height() + 2
-  self.lines = []
-  self.max_lines = max_lines
-  self.line_h = game.font2.get_height() + 2
-  self.scroll = 0
-
- def max_scroll(self):
-  visible_rows = max(1, self.rect.h // self.line_h)
-  return max(0, len(self.lines) - visible_rows)
-
- def clamp_scroll(self):
-  self.scroll = max(0, min(self.scroll, self.max_scroll()))
-
- def update(self, event):
-  if event.type == pygame.MOUSEBUTTONDOWN:
-   if not self.is_top(event.pos):
-    return
-   if self.file is not None:
-    if event.button == 1:
-     if self.close_rect.collidepoint(event.pos):
-      self.file.open = False
-      if self in self.game.windows:
-       self.game.windows.remove(self)
-      return
-     if self.titlebar_rect.collidepoint(event.pos):
-      self.dragging = True
-      self._drag_off = (event.pos[0] - self.rect.x, event.pos[1] - self.rect.y)
-      if self in self.game.windows:
-       self.game.windows.remove(self)
-      self.game.windows.append(self)
-
-  elif event.type == pygame.MOUSEWHEEL:
-   self.scroll += event.y
-   self.clamp_scroll()
-
-  elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-   self.dragging = False
-
-  elif event.type == pygame.MOUSEMOTION and self.dragging:
-   self.rect.x = event.pos[0] - self._drag_off[0]
-   self.rect.y = event.pos[1] - self._drag_off[1]
-
- def add_line(self, s: str):
-  max_w = self.rect.w - 10
-  words = s.split(' ')
-  cur = ""
-  for w in words:
-   test = (cur + " " + w).strip()
-   if self.game.font2.size(test)[0] <= max_w:
-    cur = test
-   else:
-    self.lines.append(cur)
-    cur = w
-  if cur:
-   self.lines.append(cur)
-
-  if len(self.lines) > self.max_lines:
-   over = len(self.lines) - self.max_lines
-   self.lines = self.lines[over:]
-
-  self.clamp_scroll()
-
- def render(self):
-  super().render()
-  self.clamp_scroll()
-  visible_rows = max(1, self.rect.h // self.line_h)
-  start = max(0, len(self.lines) - visible_rows - self.scroll)
-  end = start + visible_rows
-  for i, line in enumerate(self.lines[start:end]):
-   surf = self.game.font2.render(line, True, (10,15,22))
-   self.game.screen.blit(surf, (self.rect.x + 5, self.rect.y + 5 + i*self.line_h))
-
-class LogWindow(ConsoleWindow):
-    def __init__(self, file, game):
-        super().__init__(file, game, size=(360, 220), max_lines=240)
-        self.script = [
-            '[01/15 02:36] session restore started',
-            '[01/15 02:37] mkdir .hidden',
-            '[01/15 02:38] copy cmd.sys .hidden/cmd.sys',
-            '[01/15 02:38] copy cmd_manual.txt .hidden/cmd_manual.txt',
-            '[01/15 02:40] hidden directory created by user',
-            '[01/15 02:41] set hidden=true',
-            '[01/15 02:41] remove directory from visible index',
-            '[01/15 02:41] bind visibility to directory creation point',
-            '[01/15 02:42] user note: search by the moment it disappeared',
-            '[01/15 02:43] unknown access request detected',
-            '[01/15 02:43] request denied',
-            '[01/15 02:43] request denied',
-            '[01/15 02:44] request denied',
-            '[01/15 02:44] request accepted',
-            '[01/15 02:44] user note: i moved cmd before it could use it',
-            '[01/15 02:45] system warning: hidden entry accessed by non-user process',
-            '[01/15 02:46] system warning: process is still active'
-        ]
-        self.reset_log()
-        self.state = 0; self.index = 0; self.elapsed = 0; self.finished = 0
-
-    def reset_log(self):
-        self.lines.clear()
+    def __init__(self, file, game, size=(280, 160), max_lines=200):
+        super().__init__(file, game, size)
+        self.lines = []
+        self.max_lines = max_lines
+        self.line_h = game.font2.get_height() + 2
         self.scroll = 0
-        self.state = 'prompt'
-        self.index = 0
-        self.elapsed = 0
-        self.finished = False
-        self.add_line('last session was not closed properly.')
-        self.add_line('restore previous input? y/n')
 
     def update(self, event):
-        super().update(event)
-        if self not in self.game.windows or event.type != pygame.KEYDOWN: return
-        if self.state == 'prompt':
-            if event.key == pygame.K_y:
-                self.state = 'restore'
-                self.add_line('')
-                self.add_line('restoring session...')
-                self.add_line('')
-                self.game.asset['sfx/open'].play()
-            elif event.key == pygame.K_n:
-                self.state = 'done'
-                self.add_line('restore aborted')
-                self.add_line('press r to reload')
-                self.game.asset['sfx/locked'].play()
-            elif self.state == 'done' and event.key == pygame.K_r:
-                self.reset_log()
-                self.game.asset['sfx/tick'].play()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if not self.is_top(event.pos):
+                return
 
-    def tick(self, dt):
-        if self.state != 'restore': return
-        self.elapsed += dt
-        if self.elapsed < 280: return
-        self.elapsed = 0
-        if self.index < len(self.script):
-            line = self.script[self.index]
-            self.add_line(line)
-            self.index += 1
-            self.game.asset['sfx/tick'].play()
-            return
-        if not self.finished:
-            self.finished = True
-            self.state = 'done'
-            self.add_line('')
-            self.add_line('restore complete')
-            self.add_line('press r to replay')
+        if self.file is not None:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.close_rect.collidepoint(event.pos):
+                    self.file.open = False
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                    return
+                if self.titlebar_rect.collidepoint(event.pos):
+                    self.dragging = True
+                    self._drag_off = (event.pos[0] - self.rect.x, event.pos[1] - self.rect.y)
+                    if self in self.game.windows:
+                        self.game.windows.remove(self)
+                        self.game.windows.append(self)
+
+            elif event.type == pygame.MOUSEWHEEL:
+                self.scroll += event.y
+
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                self.dragging = False
+
+            elif event.type == pygame.MOUSEMOTION and self.dragging:
+                self.rect.x = event.pos[0] - self._drag_off[0]
+                self.rect.y = event.pos[1] - self._drag_off[1]
+
+    def add_line(self, s: str):
+        max_w = self.rect.w - 10
+        words = s.split(' ')
+        cur = ""
+        for w in words:
+            test = (cur + " " + w).strip()
+            if self.game.font2.size(test)[0] <= max_w:
+                cur = test
+            else:
+                self.lines.append(cur)
+                cur = w
+        if cur:
+            self.lines.append(cur)
+        if len(self.lines) > self.max_lines:
+            over = len(self.lines) - self.max_lines
+            self.lines = self.lines[over:]
+
+    def render(self):
+        super().render()
+        visible_rows = self.rect.h // self.line_h
+        start = max(0, len(self.lines) - visible_rows - self.scroll)
+        end   = start + visible_rows
+        for i, line in enumerate(self.lines[start:end]):
+            surf = self.game.font2.render(line, True, (10,15,22))
+            self.game.screen.blit(surf, (self.rect.x + 5, self.rect.y + 5 + i*self.line_h))
 
 
 
@@ -1031,29 +591,25 @@ class File:
 
     def render(self, clr='#FFFFFF'):
         self.game.screen.blit(self.icon, self.pos)
-        lines = wrap_label(self.game.font, self.display_name)
-        line_h = self.game.font.get_height() + LABEL_LINE_GAP
-        for i, line in enumerate(lines):
-            text = self.game.font.render(line, False, clr)
-            w = self.game.font.size(line)[0]
-            x = self.pos[0] + ICON_SIZE // 2 - w // 2
-            y = self.pos[1] + ICON_SIZE - 2 + i * line_h
-            self.game.screen.blit(text, (x, y))
+        label = self.display_name
+        text = self.game.font.render(label, False, clr)
+        w = self.game.font.size(label)[0]
+        if w > 50:
+            name1 = label[:len(label) // 2]
+            name2 = label[len(label) // 2:]
+            text1 = self.game.font.render(name1, False, clr)
+            text2 = self.game.font.render(name2, False, clr)
+            self.game.screen.blit(text1, (self.pos[0] + 16 - w / 4, self.pos[1] + 30))
+            self.game.screen.blit(text2, (self.pos[0] + 16 - w / 4, self.pos[1] + 44))
+        else: self.game.screen.blit(text, (self.pos[0] + 16 - w / 2, self.pos[1] + 30))
         if not self.interaction: self.game.screen.blit(self.game.asset['lock'], self.pos)
 
 class Directory(File):
     def __init__(self, game, name, pos, files, interaction, child = False, size=(100, 100)):
         self.files = files
-        self.size = directory_auto_size(self.files, size)
+        self.size = size
         super().__init__(game, name, pos, 'directory', interaction, self.size, child)
         self.window = DirWindow(self, self.game, self.size, files)
-        self.refresh_layout()
-
-    def refresh_layout(self):
-        self.size = directory_auto_size(self.files, self.size)
-        self.window.size = self.size
-        self.window.rect.size = self.size
-        self.window.files = self.files
         for f in self.files:
             f.owner_window = self.window
             f.child = True
@@ -1073,7 +629,6 @@ class Directory(File):
             if self.interaction:
                 self.open = True
                 self.game.dc.reset()
-                self.refresh_layout()
                 self.window.rect.topleft = (self.pos[0] - 10, self.pos[1] - 10)
                 if self.window not in self.game.windows:
                     self.game.windows.append(self.window)
@@ -1123,22 +678,11 @@ class LockImg(Image):
         super().__init__(game, name, pos, interaction, child)
         self.window = LockWindow(self, self.game, self.image.get_size(), self.image)
         self.objType = 'lock'
-        self.display_name = display_name(self.name, self.objType)
         self.icon = self.game.asset['icon/etc']
 class InteractiveImg(Image):
     def __init__(self, game, name, pos, interaction, child = False):
         super().__init__(game, name, pos, interaction, child)
-        if self.name == 'moon': self.objType = 'lock'; self.display_name = display_name(self.name, self.objType)
-        if self.name == 'clock':
-            self.objType = 'lock'; self.display_name = display_name(self.name, self.objType)
-            self.window = ClockWindow(self, self.game, self.size)
-        else: self.window = InteractiveImgWindow(self, self.game, self.size, self.image)
-class PhaseImg(Image):
-    def __init__(self, game, name, pos, interaction, child = False):
-        super().__init__(game, name, pos, interaction, child)
-        self.objType = 'sys'
-        self.display_name = display_name(self.name, self.objType)
-        self.window = PhaseWindow(self, self.game, self.size, self.image)
+        self.window = InteractiveImgWindow(self, self.game, self.size, self.image)
 
 class Locker(File):
     def __init__(self, game, name, pos, password, interaction, child=False):
@@ -1160,17 +704,7 @@ class PadLock(File):
         super().__init__(game, name, pos, '', interaction, (100, 100), child)
         self.window = PadLockWindow(self, self.game, target)
 
-class Rotor(File):
-    def __init__(self, game, name, pos, interaction, child=False):
-        super().__init__(game, name, pos, 'sys', interaction, child=child)
-        self.window = RotorWindow(self, self.game)
-
 class Command(File):
     def __init__(self, game, name, pos, interaction, child = False):
         super().__init__(game, name, pos, 'command', interaction, child=child)
         self.window = CommandWindow(self, self.game)
-
-class Log(File):
- def __init__(self, game, name, pos, interaction, child=False):
-  super().__init__(game, name, pos, 'sys', interaction, (360, 220), child)
-  self.window = LogWindow(self, self.game)

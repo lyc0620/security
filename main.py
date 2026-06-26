@@ -1,7 +1,7 @@
 import pygame
 import sys
 from codes.util import DoubleClick, loadImg, loadText, alphaRect, LayeredLooper, loadImgs
-from codes.funcs import lm, lto, dl, plc, ec, log, ping, msg, cmc
+from codes.funcs import lm, lto, dl, plc, cmc
 
 class Game:
     def __init__(self):
@@ -36,8 +36,6 @@ class Game:
             'txt/Tx7y1': loadText('Tx7y1.txt'),
             'txt/2nasHf': loadText('2nasHf.txt'),
             'txt/9o12': loadText('9o12.txt'),
-            'txt/log': loadText('log.txt'),
-            'txt/help': loadText('help.txt'),
             'txt/align': loadText('align.txt'),
             'txt/encoded': loadText('encoded.txt'),
 
@@ -108,14 +106,6 @@ class Game:
     def download(self, name): dl(self, name)
 
     def padLockClear(self): plc(self)
-
-    def ensureConsole(self): return ec(self)
-
-    def log(self, target): log(self, target)
-
-    def ping(self, target): ping(self, target)
-
-    def msg(self, target): msg(self, target)
 
     def checkMoonClock(self): cmc(self)
 
