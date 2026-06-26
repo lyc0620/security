@@ -4,20 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="87ed623d-325a-4da5-b72b-43df2ad9410c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/asset/sfx/ominous.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/sfx/reboot.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/help.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/asset/txt/log.txt" afterDir="false" />
+    <list default="true" id="87ed623d-325a-4da5-b72b-43df2ad9410c" name="Changes" comment="commit">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/asset/img/wire.png" beforeDir="false" afterPath="$PROJECT_DIR$/asset/img/wire.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/asset/txt/2nasHf.txt" beforeDir="false" afterPath="$PROJECT_DIR$/asset/txt/2nasHf.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bgm gpt.wav" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/asset/img/kf3s.png" beforeDir="false" afterPath="$PROJECT_DIR$/asset/img/kf3s.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/codes/funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/codes/funcs.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/codes/object.py" beforeDir="false" afterPath="$PROJECT_DIR$/codes/object.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/codes/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/codes/util.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/temp.py" beforeDir="false" afterPath="$PROJECT_DIR$/temp.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,60 +118,55 @@
       <workItem from="1755432252515" duration="9968000" />
       <workItem from="1755479871194" duration="5625000" />
       <workItem from="1755501668607" duration="13922000" />
-      <workItem from="1755527688818" duration="1292000" />
+      <workItem from="1755527688818" duration="1812000" />
+      <workItem from="1755564371365" duration="1187000" />
+      <workItem from="1755781072480" duration="2054000" />
+      <workItem from="1755851818922" duration="728000" />
+      <workItem from="1755959945235" duration="595000" />
+      <workItem from="1757899367250" duration="9000" />
+      <workItem from="1758721612551" duration="1374000" />
+      <workItem from="1758775179124" duration="8000" />
+      <workItem from="1759140739734" duration="954000" />
+      <workItem from="1759225703735" duration="10000" />
+      <workItem from="1761031361777" duration="2306000" />
+      <workItem from="1761264888510" duration="30000" />
+      <workItem from="1776979029236" duration="4284000" />
+      <workItem from="1777193693567" duration="7000" />
+      <workItem from="1777314003379" duration="1370000" />
+      <workItem from="1777404421279" duration="8000" />
+      <workItem from="1781171497792" duration="1271000" />
+      <workItem from="1781452598824" duration="799000" />
+      <workItem from="1781541059509" duration="10000" />
+      <workItem from="1782149171962" duration="3123000" />
+      <workItem from="1782324535914" duration="74000" />
+      <workItem from="1782362771192" duration="5551000" />
+      <workItem from="1782371322420" duration="303000" />
+      <workItem from="1782423120642" duration="4339000" />
     </task>
+    <task id="LOCAL-00001" summary="commit">
+      <option name="closed" value="true" />
+      <created>1755529489501</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1755529489501</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/codes/object.py</url>
-          <line>146</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/codes/object.py</url>
-          <line>225</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/codes/object.py</url>
-          <line>74</line>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/codes/object.py</url>
-          <line>37</line>
-          <option name="timeStamp" value="9" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/codes/object.py</url>
-          <line>178</line>
-          <option name="timeStamp" value="10" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/codes/object.py</url>
-          <line>365</line>
-          <option name="timeStamp" value="11" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/codes/object.py</url>
-          <line>428</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="commit" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Security$object.coverage" NAME="object Coverage Results" MODIFIED="1755516084631" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
     <SUITE FILE_PATH="coverage/Security$temp.coverage" NAME="temp Coverage Results" MODIFIED="1755501861889" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Security$util.coverage" NAME="util Coverage Results" MODIFIED="1755416774013" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
-    <SUITE FILE_PATH="coverage/Security$main.coverage" NAME="main Coverage Results" MODIFIED="1755528987498" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Security$main.coverage" NAME="main Coverage Results" MODIFIED="1782426834696" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Security$test.coverage" NAME="test Coverage Results" MODIFIED="1754896503719" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Security$funcs.coverage" NAME="funcs Coverage Results" MODIFIED="1755331284254" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
+    <SUITE FILE_PATH="coverage/Security$funcs.coverage" NAME="funcs Coverage Results" MODIFIED="1761032693441" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/codes" />
   </component>
 </project>

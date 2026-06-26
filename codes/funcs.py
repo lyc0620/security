@@ -24,24 +24,24 @@ def lm(game):
                     ], True, True, (150, 70))
                 ], True, True, (150, 70))
             ], True, True, (150, 70)),
-            Image(game, 'ka31go', (5, 60), True, True),
-            Image(game, 'z1p81', (55, 60), True, True),
-            Directory(game, '2n1', (105, 60), [
+            Directory(game, '2n1', (5, 60), [
                 Image(game, 'y30o1', (5, 0), True, True),
                 Image(game, 'o771a', (55, 0), True, True),
                 Image(game, 'fyw1', (105, 0), True, True),
                 Image(game, 's131p', (5, 60), True, True),
-                Locker(game, 'LTS', (55, 60), '640', True, True)
-            ], True, True, (200, 120))
+                Image(game, 'ka31go', (55, 60), True, True),
+                Image(game, 'z1p81', (105, 60), True, True),
+            ], True, True, (200, 120)),
+            Locker(game, 'LTS', (55, 60), '640', True, True)
         ], False, size=(200, 120)),
-                            Directory(game, 'a1nd2', (700, 100), [
-                                Image(game, '3qy4', (5, 0), True, True),
-                                Image(game, '1aaad4', (55, 0), True, True),
-                                Image(game, 'kf3s', (105, 0), True, True),
-                                Image(game, '33256', (5, 60), True, True),
-                                Text(game, 'L3I1l7', (55, 60), True, True),
-                                TransparentImg(game, 'enyl1', (105, 60), True, True)
-                            ], True, size=(200, 120))]
+        Directory(game, 'a1nd2', (700, 100), [
+            Image(game, '3qy4', (5, 0), True, True),
+            Image(game, '1aaad4', (55, 0), True, True),
+            Image(game, 'kf3s', (105, 0), True, True),
+            Image(game, '33256', (5, 60), True, True),
+            Text(game, 'L3I1l7', (55, 60), True, True),
+            TransparentImg(game, 'enyl1', (105, 60), True, True)
+        ], True, size=(200, 120))]
         game.texts = [Text(game, 'readme', (500, 420), True)]
         game.images = [LockImg(game, 'lock', (300, 400), True)]
         game.etcs = []
@@ -50,20 +50,25 @@ def lm(game):
         game.directories = [Directory(game, 'dir', (500, 350), [
             PadLock(game, 'AuthN', (5, 0), True, [[1, 0, 0], [0, 0, 1], [1, 1, 0]], True),
             Directory(game, 'Auth', (55, 0), [
-                Image(game, 'light0', (5, 0), True, True),
-                Image(game, 'light1', (55, 0), True, True),
-                Image(game, 'light2', (105, 0), True, True),
-                Image(game, 'light3', (155, 0), True, True),
-                Image(game, 'light4', (5, 60), True, True),
-                Image(game, 'light5', (55, 60), True, True),
-                Image(game, 'light6', (105, 60), True, True),
-                Image(game, 'light7', (155, 60), True, True),
-            ], True, True, (250, 140)),
+                Rotor(game, 'rotor', (5, 0), True, True),
+                Text(game, 'align', (55, 0), True, True),
+                Text(game, 'encoded', (105, 0), True, True),
+                Image(game, 'calib', (155, 0), True, True)
+                # Image(game, 'light0', (5, 0), True, True),
+                # Image(game, 'light1', (55, 0), True, True),
+                # Image(game, 'light2', (105, 0), True, True),
+                # Image(game, 'light3', (155, 0), True, True),
+                # Image(game, 'light4', (5, 60), True, True),
+                # Image(game, 'light5', (55, 60), True, True),
+                # Image(game, 'light6', (105, 60), True, True),
+                # Image(game, 'light7', (155, 60), True, True),
+            ], True, True),
             InteractiveImg(game, 'moon', (105, 0), True)
         ], True, False, (200, 70))]
         game.texts = [Text(game, 'log', (150, 150), True),
                       Text(game, 'help', (200, 120), True)]
-        game.images = [InteractiveImg(game, 'clock', (620, 200), True)]
+        game.images = [InteractiveImg(game, 'clock', (620, 200), True),
+                       Image(game, 'num', (300, 570), True)]
         game.etcs = [Command(game, 'cmd', (700, 420), False)]
 
 def lto(game):
@@ -115,9 +120,7 @@ def dl(game, file):
                         directory.files.append(PadLock(game, 'reboot', (0, 0), True, [[1, 0, 0, 1, 1, 0], [0, 1, 0, 1, 0, 0], [1, 0, 0, 0, 0, 0]], True))
                         directory.files.append(Text(game, '9o12', (50, 0), True, True))
                         directory.files.append(Text(game, '2nasHf', (100, 0), True, True))
-                        for f in directory.files:
-                            f.owner_window = directory.window
-                        directory.window.rect.w = 150
+                        directory.refresh_layout()
                         directory.window.rect.topleft = pos
                         for file in directory.files:
                             if file.objType == 'directory' and file not in game.directories:
@@ -149,7 +152,13 @@ def plc(game):
         game.texts.clear()
         game.etcs.clear()
 
-        game.windows.append(LoaderWindow(None, game, comment='Rebooting the System.', size=(200, 60)))
+        game.light = False
+        game.suppress_bgm = True
+        game.bgm_playing = False
+        game.bgm_channel.stop()
+
+        game.windows.append(SystemRebootWindow(None, game))
+
     elif game.map[0] == 1:
         for etc in game.etcs:
             if etc.name == 'cmd':
@@ -168,9 +177,7 @@ def ec(game):
 def log(game, target):
     cw = game.ensureConsole()
     cw.add_line('$log {}'.format(target))
-    if target.lower() in ('root', 'L□■■f□r'):
-        cw.add_line('command only for the offline user')
-    else:
+    if target.lower() == 'edward':
         cw.add_line('past log'.format(target))
         cw.add_line(''.format(target))
         cw.add_line('19.01.13'.format(target))
@@ -204,6 +211,8 @@ def log(game, target):
         cw.add_line('write dir for next user'.format(target))
         cw.add_line('system: del -u Edward'.format(target))
         cw.add_line('system: kill sys'.format(target))
+    else:
+        cw.add_line('command only for the offline user')
     game.asset['sfx/tick'].play()
 
 def ping(game, target):
@@ -235,10 +244,20 @@ def msg(game, target):
         game.asset['sfx/locked'].play()
 
 def cmc(game):
-    moon = None; clock = None
-    for w in game.windows:
-        if w.file.name == 'moon': moon = w.index
-        elif w.file.name == 'clock': clock = w.index
+    moon = None
+    clock = None
 
-    if moon == 3 and clock == 2:
-        game.directories.append(Directory(game, 'dir_Ed', (705, 60), [], True))
+    for w in game.windows:
+        if not w.file:
+            continue
+
+        if w.file.name == 'moon':
+            moon = w.index
+
+        elif w.file.name == 'clock':
+            clock = (w.hour, w.minute)
+
+    if moon == 3 and clock == (3, 30):
+        game.directories.append(Directory(game, 'dir_Ed', (705, 60), [
+            Text(game, 'Ed-readme', (5, 0), True, True),
+        ], True))

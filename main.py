@@ -9,7 +9,11 @@ class Game:
         pygame.mixer.init()
         pygame.mixer.set_num_channels(64)
 
-        self.screen = pygame.display.set_mode((900, 650))
+        self.BASE_SIZE = (900, 650)
+        self.display = pygame.display.set_mode(self.BASE_SIZE, pygame.RESIZABLE)
+        self.screen = pygame.Surface(self.BASE_SIZE)
+        self.view_rect = pygame.Rect(0, 0, *self.BASE_SIZE)
+        self.update_view_rect()
         self.FPSCLOCK = pygame.time.Clock()
         pygame.display.set_caption('Security')
         self.dc = DoubleClick()
@@ -34,6 +38,8 @@ class Game:
             'txt/9o12': loadText('9o12.txt'),
             'txt/log': loadText('log.txt'),
             'txt/help': loadText('help.txt'),
+            'txt/align': loadText('align.txt'),
+            'txt/encoded': loadText('encoded.txt'),
 
             'image/lock': pygame.transform.scale(loadImg('lock.png', [0], 2, 1)[0], (55, 55)),
             'image/1aaad4': pygame.image.load('asset/img/1aaad4.png'),
@@ -48,8 +54,10 @@ class Game:
             'image/ka31go': loadImg('pw.png', [3], 3, 2)[0],
             'image/s131p': loadImg('pw.png', [4], 3, 2)[0],
             'image/y30o1': loadImg('pw.png', [5], 3, 2)[0],
-            'image/clock': loadImg('clock.png', range(6), 2, 3),
+            'image/clock': loadImg('clock.png', range(1), 1, 1)[0],
             'image/moon': loadImg('moon.png', range(6), 2, 3),
+            'image/calib': pygame.image.load('asset/img/calib.png'),
+            'image/num': pygame.image.load('asset/img/num.png'),
 
             'sfx/locked': pygame.mixer.Sound('asset/sfx/locked.wav'),
             'sfx/open': pygame.mixer.Sound('asset/sfx/open.wav'),
@@ -73,9 +81,10 @@ class Game:
         self.c_loop = LayeredLooper(self.asset['sfx/c'], self.c_channels, interval_ms=13)
         self.bgm_channel = pygame.mixer.Channel(1)
         self.bgm_playing = False
+        self.suppress_bgm = False
 
         self.font = pygame.font.Font('asset/font/OCR-B.ttf', 7)
-        self.font2 = pygame.font.Font('asset/font/OCR-B.ttf', 10)
+        self.font2 = pygame.font.Font('asset/font/OCR-B.ttf', 8)
         self.font3 = pygame.font.Font('asset/font/OCR-B.ttf', 35)
         self.font4 = pygame.font.Font('asset/font/ChicagoFLF.ttf', 10)
 
@@ -110,6 +119,48 @@ class Game:
 
     def checkMoonClock(self): cmc(self)
 
+    def update_view_rect(self):
+        win_w, win_h = self.display.get_size()
+        base_w, base_h = self.BASE_SIZE
+
+        scale = min(win_w / base_w, win_h / base_h)
+        view_w = int(base_w * scale)
+        view_h = int(base_h * scale)
+
+        self.view_rect = pygame.Rect(
+            (win_w - view_w) // 2,
+            (win_h - view_h) // 2,
+            view_w,
+            view_h
+        )
+
+    def to_game_pos(self, pos):
+        x, y = pos
+
+        if self.view_rect.w == 0 or self.view_rect.h == 0:
+            return 0, 0
+
+        gx = (x - self.view_rect.x) * self.BASE_SIZE[0] / self.view_rect.w
+        gy = (y - self.view_rect.y) * self.BASE_SIZE[1] / self.view_rect.h
+
+        gx = max(0, min(self.BASE_SIZE[0] - 1, int(gx)))
+        gy = max(0, min(self.BASE_SIZE[1] - 1, int(gy)))
+
+        return gx, gy
+
+    def to_game_event(self, event):
+        if hasattr(event, 'pos'):
+            data = event.__dict__.copy()
+            data['pos'] = self.to_game_pos(event.pos)
+            return pygame.event.Event(event.type, data)
+        return event
+
+    def present(self):
+        self.display.fill((0, 0, 0))
+        scaled = pygame.transform.scale(self.screen, self.view_rect.size)
+        self.display.blit(scaled, self.view_rect.topleft)
+        pygame.display.update()
+
     def main(self):
         while True:
             if type(self.map) == int: self.loadmap(); self.map = (self.map, )#; self.asset['sfx/reboot'].play()
@@ -122,10 +173,16 @@ class Game:
             dc_pos = None
 
             for event in pygame.event.get():
-                if self.dc(event): dc_pos = self.dc.pos
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                if event.type == pygame.VIDEORESIZE:
+                    self.display = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                    self.update_view_rect()
+                    continue
+
+                event = self.to_game_event(event)
+                if self.dc(event): dc_pos = self.dc.pos
                 for wnd in reversed(self.windows):
                     wnd.update(event)
 
@@ -154,13 +211,13 @@ class Game:
             self.c_loop.set_enabled(not self.light)
             self.c_loop.update()
 
-            if not self.bgm_playing:
+            if not self.bgm_playing and not self.suppress_bgm:
                 self.bgm_channel.play(self.asset['sfx/bass'], loops=-1)
                 self.bgm_playing = True
 
-            self.screen.blit(self.asset['cursor'], pygame.mouse.get_pos())
-            if not self.light: alphaRect(self.screen, (0, 0, 0, 170), (0, 0, 900, 650))
-            pygame.display.update()
+            self.screen.blit(self.asset['cursor'], self.to_game_pos(pygame.mouse.get_pos()))
+            if not self.light: alphaRect(self.screen, (0, 0, 0, 170), (0, 0, *self.BASE_SIZE))
+            self.present()
 
 
 Game().main()
