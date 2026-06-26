@@ -176,5 +176,6 @@ def cmc(game):
 
     if moon == 3 and clock == (2, 40):
         dir_obj = Directory(game, '.hidden', (705, 60), [], True)
-        if dir_obj not in game.directories: game.asset['sfx/open'].play()
-        game.directories.append(dir_obj)
+        if dir_obj not in game.directories:
+            game.asset['sfx/open'].play()
+            game.directories.append(dir_obj)
