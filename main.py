@@ -38,6 +38,8 @@ class Game:
             'txt/9o12': loadText('9o12.txt'),
             'txt/align': loadText('align.txt'),
             'txt/encoded': loadText('encoded.txt'),
+            'txt/cmd_manual': loadText('cmd_manual.txt'),
+            'txt/.cache': loadText('cache.txt'),
 
             'image/lock': pygame.transform.scale(loadImg('lock.png', [0], 2, 1)[0], (55, 55)),
             'image/1aaad4': pygame.image.load('asset/img/1aaad4.png'),
@@ -54,6 +56,7 @@ class Game:
             'image/y30o1': loadImg('pw.png', [5], 3, 2)[0],
             'image/clock': loadImg('clock.png', range(1), 1, 1)[0],
             'image/moon': loadImg('moon.png', range(6), 2, 3),
+            'image/phase': loadImg('moon.png', range(6), 2, 3),
             'image/calib': pygame.image.load('asset/img/calib.png'),
             'image/num': pygame.image.load('asset/img/num.png'),
 
@@ -173,17 +176,12 @@ class Game:
 
                 event = self.to_game_event(event)
                 if self.dc(event): dc_pos = self.dc.pos
-                for wnd in reversed(self.windows):
-                    wnd.update(event)
+                for wnd in reversed(self.windows): wnd.update(event)
 
-            for directory in self.directories:
-                directory.update(dc_pos)
-            for image in self.images:
-                image.update(dc_pos)
-            for text in self.texts:
-                text.update(dc_pos)
-            for etc in self.etcs:
-                etc.update(dc_pos)
+            for directory in self.directories: directory.update(dc_pos)
+            for image in self.images: image.update(dc_pos)
+            for text in self.texts: text.update(dc_pos)
+            for etc in self.etcs: etc.update(dc_pos)
             for window in self.windows:
                 window.render()
                 window.tick(self.FPSCLOCK.get_time())
@@ -195,8 +193,7 @@ class Game:
 
                 self.crack_loop.set_enabled(open_crack)
                 self.crack_loop.update()
-            except AttributeError:
-                pass
+            except AttributeError: pass
 
             self.c_loop.set_enabled(not self.light)
             self.c_loop.update()

@@ -759,84 +759,6 @@ class RotorWindow(Window):
         self.draw_text_field(self.input_rect, 'cipher input', self.cipher, self.active)
         self.draw_text_field(self.output_rect, 'live output', self.output, False)
 
-class CommandWindow(Window):
-    def __init__(self, file, game):
-        super().__init__(file, game, (200, 140))
-        self.commands = {'log': self.game.log,
-                         'ping': self.game.ping,
-                         'msg': self.game.msg}
-        self.command = 0
-        self.cmd = list(self.commands.values())[self.command]
-        self.targets = ['root', 'L□■■f□r', 'Edward']
-        self.target = 0
-
-    @property
-    def commandRect(self):
-        return [pygame.Rect(self.rect.x + 15, self.rect.y + 15 + 30 * i, 70, 20) for i in range(3)]
-
-    @property
-    def buttonRect(self):
-        return pygame.Rect(self.rect.x + 65, self.rect.y + self.rect.h - 35, 70, 20)
-
-    @property
-    def targetRect(self):
-        return [pygame.Rect(self.rect.x + 115, self.rect.y + 15 + 30 * i, 70, 20) for i in range(3)]
-
-    def update(self, event):
-        self.cmd = list(self.commands.values())[self.command]
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if not self.is_top(event.pos):
-                return
-
-        if self.file is not None:
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.close_rect.collidepoint(event.pos):
-                    self.file.open = False
-                    if self in self.game.windows:
-                        self.game.windows.remove(self)
-                    return
-                if self.titlebar_rect.collidepoint(event.pos):
-                    self.dragging = True
-                    self._drag_off = (event.pos[0] - self.rect.x, event.pos[1] - self.rect.y)
-                    if self in self.game.windows:
-                        self.game.windows.remove(self)
-                        self.game.windows.append(self)
-                for i in range(len(self.commandRect)):
-                    if self.commandRect[i].collidepoint(event.pos): self.command = i; self.game.asset['sfx/tick'].play()
-                for i in range(len(self.targetRect)):
-                    if self.targetRect[i].collidepoint(event.pos): self.target = i; self.game.asset['sfx/tick'].play()
-                if self.buttonRect.collidepoint(event.pos): self.cmd(self.targets[self.target]); self.game.asset['sfx/tick'].play()
-
-            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                self.dragging = False
-
-            elif event.type == pygame.MOUSEMOTION and self.dragging:
-                self.rect.x = event.pos[0] - self._drag_off[0]
-                self.rect.y = event.pos[1] - self._drag_off[1]
-
-    def render(self):
-        super().render()
-        for i in range(len(self.commandRect)):
-            if i == self.command: pygame.draw.rect(self.game.screen, CLR_CLOSE, self.commandRect[i])
-            else: pygame.draw.rect(self.game.screen, CLR_BORDER, self.commandRect[i])
-            text = self.game.font4.render(list(self.commands.keys())[i], False, (10, 15, 22))
-            x = self.commandRect[i].x + (self.commandRect[i].w - self.game.font4.size(list(self.commands.keys())[i])[0]) // 2
-            y = self.commandRect[i].y + (self.commandRect[i].h - self.game.font4.size(list(self.commands.keys())[i])[1]) // 2
-            self.game.screen.blit(text, (x, y))
-        for i in range(len(self.targetRect)):
-            if i == self.target: pygame.draw.rect(self.game.screen, CLR_CLOSE, self.targetRect[i])
-            else: pygame.draw.rect(self.game.screen, CLR_BORDER, self.targetRect[i])
-            text = self.game.font4.render(self.targets[i], False, (10, 15, 22))
-            x = self.targetRect[i].x + (self.targetRect[i].w - self.game.font4.size(self.targets[i])[0]) // 2
-            y = self.targetRect[i].y + (self.targetRect[i].h - self.game.font4.size(self.targets[i])[1]) // 2
-            self.game.screen.blit(text, (x, y))
-        pygame.draw.rect(self.game.screen, CLR_CLOSE, self.buttonRect)
-        text = self.game.font4.render('run', False, (10, 15, 22))
-        x = self.buttonRect.x + (self.buttonRect.w - self.game.font4.size('run')[0]) // 2
-        y = self.buttonRect.y + (self.buttonRect.h - self.game.font4.size('run')[1]) // 2
-        self.game.screen.blit(text, (x, y))
-
 class ConsoleWindow(Window):
  def __init__(self, file, game, size=(280, 160), max_lines=200):
   super().__init__(file, game, size)
@@ -913,7 +835,6 @@ class ConsoleWindow(Window):
   for i, line in enumerate(self.lines[start:end]):
    surf = self.game.font2.render(line, True, (10,15,22))
    self.game.screen.blit(surf, (self.rect.x + 5, self.rect.y + 5 + i*self.line_h))
-
 class LogWindow(ConsoleWindow):
     def __init__(self, file, game):
         super().__init__(file, game, size=(360, 220), max_lines=240)
@@ -923,10 +844,10 @@ class LogWindow(ConsoleWindow):
             '[01/15 02:38] copy cmd.sys .hidden/cmd.sys',
             '[01/15 02:38] copy cmd_manual.txt .hidden/cmd_manual.txt',
             '[01/15 02:40] hidden directory created by user',
-            '[01/15 02:41] set hidden=true',
-            '[01/15 02:41] remove directory from visible index',
+            '[01/15 02:40] set hidden=true',
+            '[01/15 02:40] remove directory from visible index',
             '[01/15 02:41] bind visibility to directory creation point',
-            '[01/15 02:42] user note: search by the moment it disappeared',
+            '[01/15 02:41] user note: search by the moment it disappeared',
             '[01/15 02:43] unknown access request detected',
             '[01/15 02:43] request denied',
             '[01/15 02:43] request denied',
@@ -937,7 +858,6 @@ class LogWindow(ConsoleWindow):
             '[01/15 02:46] system warning: process is still active'
         ]
         self.reset_log()
-        self.state = 0; self.index = 0; self.elapsed = 0; self.finished = 0
 
     def reset_log(self):
         self.lines.clear()
@@ -964,9 +884,9 @@ class LogWindow(ConsoleWindow):
                 self.add_line('restore aborted')
                 self.add_line('press r to reload')
                 self.game.asset['sfx/locked'].play()
-            elif self.state == 'done' and event.key == pygame.K_r:
-                self.reset_log()
-                self.game.asset['sfx/tick'].play()
+        elif self.state == 'done' and event.key == pygame.K_r:
+            self.reset_log()
+            self.game.asset['sfx/tick'].play()
 
     def tick(self, dt):
         if self.state != 'restore': return
@@ -985,7 +905,223 @@ class LogWindow(ConsoleWindow):
             self.add_line('')
             self.add_line('restore complete')
             self.add_line('press r to replay')
+class CmdWindow(ConsoleWindow):
+    def __init__(self, file, game):
+        super().__init__(file, game, size=(360, 220), max_lines=240)
+        self.input = ''
+        self.booted = False
+        self.commands = {
+            'help': True,
+            'status': True,
+            'scan': True,
+            'open': True,
+            'decrypt': False,
+            'access': False
+        }
 
+    def boot(self):
+        if self.booted:
+            return
+        self.booted = True
+        self.add_line('.hidden/cmd')
+        self.add_line('')
+        self.add_line('session: restored')
+        self.add_line('authority: partial')
+        self.add_line('visible index: corrupted')
+        self.add_line('hidden index: unavailable')
+        self.add_line('')
+        self.add_line('type "help"')
+
+    def update(self, event):
+        super().update(event)
+
+        if self not in self.game.windows:
+            return
+
+        self.boot()
+
+        if event.type != pygame.KEYDOWN:
+            return
+
+        if event.key == pygame.K_BACKSPACE:
+            self.input = self.input[:-1]
+            self.game.asset['sfx/tick'].play()
+
+        elif event.key == pygame.K_RETURN:
+            command = self.input.strip()
+            self.add_line('> ' + command)
+            self.input = ''
+            self.run_command(command)
+
+        elif event.key == pygame.K_ESCAPE:
+            self.input = ''
+
+        elif event.unicode and event.unicode.isprintable():
+            self.input += event.unicode
+            self.game.asset['sfx/tick'].play()
+
+    def render(self):
+        super().render()
+
+        prompt = '> ' + self.input
+        if pygame.time.get_ticks() // 400 % 2 == 0:
+            prompt += '_'
+
+        pygame.draw.rect(
+            self.game.screen,
+            CLR_BODY,
+            (self.rect.x + 2, self.rect.bottom - self.line_h - 5, self.rect.w - 4, self.line_h + 4)
+        )
+
+        surf = self.game.font2.render(prompt, True, (10, 15, 22))
+        self.game.screen.blit(surf, (self.rect.x + 5, self.rect.bottom - self.line_h - 3))
+
+    def run_command(self, raw):
+        if not raw: return
+
+        parts = raw.split()
+        cmd = parts[0].lower()
+        args = parts[1:]
+
+        if cmd not in self.commands:
+            self.add_line('unknown command')
+            self.game.asset['sfx/locked'].play()
+            return
+
+        if not self.commands[cmd]:
+            self.add_line(cmd + ': command locked')
+            self.game.asset['sfx/locked'].play()
+            return
+
+        {
+            'help': self.cmd_help,
+            'status': self.cmd_status,
+            'scan': self.cmd_scan,
+            'open': self.cmd_open,
+            'decrypt': self.cmd_decrypt,
+            'access': self.cmd_access
+        }[cmd](args)
+
+    def cmd_open(self, args):
+        if not args:
+            self.add_line('usage: open [entry]')
+            return
+
+        if not self.cache_exists():
+            self.add_line('cache missing')
+            self.add_line('run scan first')
+            return
+
+        target = args[0].lower()
+
+        if target == '.sig':
+            self.open_sig_dir()
+            return
+
+        self.add_line(target + ': entry not found')
+
+    def open_sig_dir(self):
+        if getattr(self, 'sig_dir', None) is None:
+            self.sig_dir = Directory(self.game, '.sig', (320, 240), [
+                Text(self.game, '.cache', (5, 0), True, True),
+            ], True, True, (130, 70))
+
+        self.open_virtual_dir(self.sig_dir)
+        self.add_line('opening hidden directory: .sig')
+
+    def open_key_dir(self):
+        if getattr(self, 'key_dir', None) is None:
+            self.key_dir = Directory(self.game, '.sig', (320, 240), [
+                Text(self.game, '.cache', (5, 0), True, True),
+            ], True, True, (130, 70))
+
+        self.open_virtual_dir(self.key_dir)
+        self.add_line('opening hidden directory: .key')
+
+    def open_virtual_dir(self, directory):
+        directory.refresh_layout()
+        directory.window.rect.topleft = (directory.pos[0] - 10, directory.pos[1] - 10)
+
+        if directory.window not in self.game.windows:
+            self.game.windows.append(directory.window)
+
+        for file in directory.files:
+            if file.objType == 'directory' and file not in self.game.directories:
+                self.game.directories.append(file)
+            elif file.objType == 'image' and file not in self.game.images:
+                self.game.images.append(file)
+            elif file.objType == 'txt' and file not in self.game.texts:
+                self.game.texts.append(file)
+            elif file not in self.game.etcs:
+                self.game.etcs.append(file)
+
+    def cmd_help(self, args):
+        self.add_line('')
+        self.add_line('available commands:')
+        for name, opened in self.commands.items():
+            if opened:
+                self.add_line(name)
+
+        self.add_line('')
+        self.add_line('locked commands:')
+        for name, opened in self.commands.items():
+            if not opened:
+                self.add_line(name)
+
+        self.add_line('')
+        self.add_line('manual:')
+        self.add_line('scan restores hidden cache.')
+        self.add_line('open [entry] opens cmd-only entries.')
+
+    def cmd_status(self, args):
+        cache_found = self.cache_exists()
+        self.add_line('authority: partial')
+        self.add_line('visible index: corrupted')
+        self.add_line('hidden index: {}'.format('loaded' if cache_found else 'unavailable'))
+        self.add_line('cache: {}'.format('recovered' if cache_found else 'missing'))
+        self.add_line('decrypt: {}'.format('available' if self.commands['decrypt'] else 'locked'))
+        self.add_line('access: {}'.format('available' if self.commands['access'] else 'locked'))
+
+    def cmd_scan(self, args):
+        if self.cache_exists():
+            self.add_line('scan complete.')
+            self.add_line('cache already recovered.')
+            self.game.asset['sfx/locked'].play()
+            return
+
+        hidden = self.hidden_dir()
+        if not hidden:
+            self.add_line('scan failed.')
+            self.add_line('.hidden not mounted')
+            self.game.asset['sfx/locked'].play()
+            return
+
+        cache = Text(self.game, '.cache', (63, 0), True, True)
+        hidden.files.append(cache)
+        hidden.refresh_layout()
+
+        if cache not in self.game.texts:
+            self.game.texts.append(cache)
+
+        self.add_line('visible index damaged.')
+        self.add_line('hidden cache recovered.')
+        self.add_line('')
+        self.add_line('new visible file:')
+        self.add_line('.cache.txt')
+        self.game.asset['sfx/open'].play()
+
+    def cmd_decrypt(self, args):
+        self.add_line('decrypt module incomplete')
+
+    def cmd_access(self, args):
+        self.add_line('access module incomplete')
+
+    def hidden_dir(self):
+        return next((d for d in self.game.directories if d.name == '.hidden'), None)
+
+    def cache_exists(self):
+        hidden = self.hidden_dir()
+        return bool(hidden and any(f.name == '.cache' for f in hidden.files))
 
 
 class File:
@@ -1165,12 +1301,12 @@ class Rotor(File):
         super().__init__(game, name, pos, 'sys', interaction, child=child)
         self.window = RotorWindow(self, self.game)
 
-class Command(File):
-    def __init__(self, game, name, pos, interaction, child = False):
-        super().__init__(game, name, pos, 'command', interaction, child=child)
-        self.window = CommandWindow(self, self.game)
-
 class Log(File):
  def __init__(self, game, name, pos, interaction, child=False):
   super().__init__(game, name, pos, 'sys', interaction, (360, 220), child)
   self.window = LogWindow(self, self.game)
+
+class CmdFile(File):
+    def __init__(self, game, name, pos, interaction, child=False):
+        super().__init__(game, name, pos, 'sys', interaction, (360, 220), child)
+        self.window = CmdWindow(self, self.game)

@@ -1,0 +1,24 @@
+CACHE RECOVERED
+
+visible index: damaged
+hidden entries: 3
+
+entry_01:
+name: .sig
+type: verifier
+access: cmd only
+
+entry_02:
+name: .key
+type: verifier
+access: cmd only
+
+entry_03:
+name: .ptr
+type: root pointer
+state: encrypted
+access: cmd only
+
+note:
+these entries are not visible files.
+use cmd: open [entry]

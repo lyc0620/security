@@ -68,7 +68,7 @@ def lm(game):
         game.images = [InteractiveImg(game, 'clock', (620, 200), True),
                        Image(game, 'num', (170, 440), True),
                        InteractiveImg(game, 'moon', (105, 140), True),
-                       PhaseImg(game, 'moon', (160, 75), True)]
+                       PhaseImg(game, 'phase', (160, 75), True)]
         game.etcs = [Log(game, 'log', (700, 420), False)]
 
 def lto(game):
@@ -164,9 +164,13 @@ def plc(game):
             if etc.name == 'log':
                 etc.interaction = True
 
+def makeHidden(game):
+    return Directory(game, '.hidden', (705, 60), [
+        CmdFile(game, 'cmd', (5, 0), True, True)
+    ], True, size=(100, 70))
+
 def cmc(game):
-    moon = None
-    clock = None
+    moon = None; clock = None
 
     for w in game.windows:
         if not w.file: continue
@@ -175,7 +179,7 @@ def cmc(game):
         elif w.file.name == 'clock': clock = (w.hour, w.minute)
 
     if moon == 3 and clock == (2, 40):
-        dir_obj = Directory(game, '.hidden', (705, 60), [], True)
-        if dir_obj not in game.directories:
-            game.asset['sfx/open'].play()
-            game.directories.append(dir_obj)
+        if any(directory.name == '.hidden' for directory in game.directories): return
+
+        game.asset['sfx/open'].play()
+        game.directories.append(makeHidden(game))
