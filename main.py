@@ -1,7 +1,28 @@
-import pygame
 import sys
-from codes.util import DoubleClick, loadImg, loadText, alphaRect, LayeredLooper, loadImgs
-from codes.funcs import lm, lto, dl, plc, cmc
+import time
+
+import pygame
+
+from codes.assets import load_assets, load_fonts
+from codes.file import (
+    CmdFile,
+    Directory,
+    Image,
+    InteractiveImg,
+    LockImg,
+    Locker,
+    Log,
+    PadLock,
+    PhaseImg,
+    Rotor,
+    Sys,
+    Text,
+    TransparentImg,
+    Tx7y1,
+)
+from codes.util import DoubleClick, LayeredLooper, alphaRect, detectCover, loadImg
+from codes.window import SystemRebootWindow
+
 
 class Game:
     def __init__(self):
@@ -18,62 +39,12 @@ class Game:
         pygame.display.set_caption('Security')
         self.dc = DoubleClick()
 
-        self.asset = {
-            'cursor': pygame.transform.scale(pygame.image.load('asset/img/cursor.png'), (24, 24)),
-            'lock': loadImg('lock.png', [0], 2, 1)[0].convert_alpha(),
-
-            'icon/directory': loadImg('icon.png', [0], 2, 2)[0],
-            'icon/image': loadImg('icon.png', [1], 2, 2)[0],
-            'icon/txt': loadImg('icon.png', [2], 2, 2)[0],
-            'icon/etc': loadImg('icon.png', [3], 2, 2)[0],
-
-            'txt/readme': loadText('readme.txt'),
-            'txt/L3I1l7': loadText('L3I1l7.txt'),
-            'txt/empty': loadText('empty1.txt'),
-            'txt/em?ty': loadText('empty2.txt'),
-            'txt/em?t\'/': loadText('empty3.txt'),
-            'txt/empty.': loadText('empty4.txt'),
-            'txt/Tx7y1': loadText('Tx7y1.txt'),
-            'txt/2nasHf': loadText('2nasHf.txt'),
-            'txt/9o12': loadText('9o12.txt'),
-            'txt/align': loadText('align.txt'),
-            'txt/encoded': loadText('encoded.txt'),
-            'txt/cmd_manual': loadText('cmd_manual.txt'),
-            'txt/.cache': loadText('cache.txt'),
-
-            'image/lock': pygame.transform.scale(loadImg('lock.png', [0], 2, 1)[0], (55, 55)),
-            'image/1aaad4': pygame.image.load('asset/img/1aaad4.png'),
-            'image/enyl1': pygame.image.load('asset/img/enyl1.png'),
-            'image/kf3s': pygame.image.load('asset/img/kf3s.png'),
-            'image/3qy4': pygame.image.load('asset/img/3qy4.png'),
-            'image/33256': pygame.image.load('asset/img/33256.png'),
-            'image/y6c20': pygame.image.load('asset/img/y6c20.png'),
-            'image/o771a': loadImg('pw.png', [0], 3, 2)[0],
-            'image/fyw1': loadImg('pw.png', [1], 3, 2)[0],
-            'image/z1p81': loadImg('pw.png', [2], 3, 2)[0],
-            'image/ka31go': loadImg('pw.png', [3], 3, 2)[0],
-            'image/s131p': loadImg('pw.png', [4], 3, 2)[0],
-            'image/y30o1': loadImg('pw.png', [5], 3, 2)[0],
-            'image/clock': loadImg('clock.png', range(1), 1, 1)[0],
-            'image/moon': loadImg('moon.png', range(6), 2, 3),
-            'image/phase': loadImg('moon.png', range(6), 2, 3),
-            'image/calib': pygame.image.load('asset/img/calib.png'),
-            'image/num': pygame.image.load('asset/img/num.png'),
-            'image/wire': pygame.image.load('asset/img/wire.png'),
-
-            'sfx/locked': pygame.mixer.Sound('asset/sfx/locked.wav'),
-            'sfx/open': pygame.mixer.Sound('asset/sfx/open.wav'),
-            'sfx/crack': pygame.mixer.Sound('asset/sfx/crack.wav'),
-            'sfx/bass': pygame.mixer.Sound('asset/sfx/bass.wav'),
-            'sfx/c': pygame.mixer.Sound('asset/sfx/c.wav'),
-            'sfx/tick': pygame.mixer.Sound('asset/sfx/tick.wav'),
-            'sfx/ominous': pygame.mixer.Sound('asset/sfx/ominous.wav'),
-            'sfx/reboot': pygame.mixer.Sound('asset/sfx/reboot.wav'),
-        }
-        self.asset['lock'].set_alpha(185)
-        self.asset['sfx/bass'].set_volume(0.25)
-        self.asset['sfx/c'].set_volume(0.5)
-        self.asset['sfx/tick'].set_volume(0.05)
+        self.asset = load_assets()
+        fonts = load_fonts()
+        self.font = fonts['font']
+        self.font2 = fonts['font2']
+        self.font3 = fonts['font3']
+        self.font4 = fonts['font4']
 
         self.crack_channels = [pygame.mixer.Channel(i) for i in range(2, 17)]
         self.crack_loop = LayeredLooper(self.asset['sfx/crack'], self.crack_channels, interval_ms=1500, fade_ms=150)
@@ -83,33 +54,256 @@ class Game:
         self.bgm_playing = False
         self.suppress_bgm = False
 
-        self.font = pygame.font.Font('asset/font/OCR-B.ttf', 7)
-        self.font2 = pygame.font.Font('asset/font/OCR-B.ttf', 8)
-        self.font3 = pygame.font.Font('asset/font/OCR-B.ttf', 35)
-        self.font4 = pygame.font.Font('asset/font/ChicagoFLF.ttf', 10)
-
         self.directories = []
         self.images = []
         self.texts = []
         self.etcs = []
         self.windows = []
 
-        self.map = 1
+        self.map = 0
+        self.loaded_map = None
         self.light = True
+        self.console = None
 
         pygame.mouse.set_visible(False)
 
-        self.console = None
+    def reset_files(self):
+        self.directories = []
+        self.images = []
+        self.texts = []
+        self.etcs = []
+        self.windows = []
 
-    def loadmap(self): lm(self)
+    def file_group(self, file):
+        if file.objType == 'directory': return self.directories
+        if file.objType in ('image', 'lock'): return self.images
+        if file.objType == 'txt': return self.texts
+        return self.etcs
 
-    def lockToOpen(self): lto(self)
+    def register_file(self, file):
+        group = self.file_group(file)
+        if file not in group: group.append(file)
 
-    def download(self, name): dl(self, name)
+    def unregister_file(self, file):
+        if file.objType == 'directory':
+            for child in file.files[:]: self.unregister_file(child)
+        if getattr(file, 'window', None): self.close_window(file.window)
+        for group in (self.directories, self.images, self.texts, self.etcs):
+            if file in group: group.remove(file)
 
-    def padLockClear(self): plc(self)
+    def open_file(self, file):
+        if file.objType == 'directory':
+            self.open_directory(file)
+            return
+        file.open = True
+        file.window.rect.topleft = (file.pos[0] - 10, file.pos[1] - 10)
+        if file.window not in self.windows: self.windows.append(file.window)
 
-    def checkMoonClock(self): cmc(self)
+    def open_directory(self, directory, window_pos=None):
+        directory.open = True
+        directory.refresh_layout()
+        directory.window.rect.topleft = window_pos or (directory.pos[0] - 10, directory.pos[1] - 10)
+        if directory.window not in self.windows: self.windows.append(directory.window)
+        for file in directory.files: self.register_file(file)
+
+    def open_virtual_dir(self, directory):
+        directory.refresh_layout()
+        directory.window.rect.topleft = (directory.pos[0] - 10, directory.pos[1] - 10)
+        if directory.window not in self.windows: self.windows.append(directory.window)
+        for file in directory.files: self.register_file(file)
+
+    def close_window(self, window):
+        if window.file is not None: window.file.open = False
+        if window in self.windows: self.windows.remove(window)
+
+    def close_directory_window(self, window):
+        if window.file is not None: window.file.open = False
+        for file in window.files[:]: self.unregister_file(file)
+        if window in self.windows: self.windows.remove(window)
+
+    def is_active_window(self, window):
+        return bool(self.windows and self.windows[-1] is window)
+
+    def focus_window_at(self, pos):
+        window = next((
+            w for w in reversed(self.windows)
+            if w.rect.collidepoint(pos) or w.titlebar_rect.collidepoint(pos)
+        ), None)
+
+        if window and window in self.windows:
+            self.windows.remove(window)
+            self.windows.append(window)
+
+    def mouse_pos(self):
+        return self.to_game_pos(pygame.mouse.get_pos())
+
+    def loadmap(self):
+        self.reset_files()
+        if self.map == 0:
+            self.directories = [Directory(self, 'DRIVE', (200, 200), [
+                Directory(self, 'sys', (5, 0), [
+                    Sys(self, 'sysDownload', (5, 0), True, True)
+                ], False, True, (100, 70)),
+                Tx7y1(self, 'Tx7y1', (55, 0), True, True),
+                Directory(self, 'empty', (105, 0), [
+                    Text(self, 'empty', (5, 0), True, True),
+                    Directory(self, 'empty', (55, 0), [
+                        Text(self, 'em?ty', (5, 0), True, True),
+                        Directory(self, 'empty', (55, 0), [
+                            Text(self, 'em?t\'/', (5, 0), True, True),
+                            Directory(self, 'empty', (55, 0), [
+                                Text(self, 'empty.', (5, 0), True, True),
+                                Image(self, 'y6c20', (55, 0), True, True)
+                            ], True, True, (155, 70))
+                        ], True, True, (150, 70))
+                    ], True, True, (150, 70))
+                ], True, True, (150, 70)),
+                Directory(self, '2n1', (5, 60), [
+                    Image(self, 'y30o1', (5, 0), True, True),
+                    Image(self, 'o771a', (55, 0), True, True),
+                    Image(self, 'fyw1', (105, 0), True, True),
+                    Image(self, 's131p', (5, 60), True, True),
+                    Image(self, 'ka31go', (55, 60), True, True),
+                    Image(self, 'z1p81', (105, 60), True, True),
+                ], True, True, (200, 120)),
+                Locker(self, 'LTS', (55, 60), '640', True, True)
+            ], False, size=(200, 120)),
+            Directory(self, 'a1nd2', (700, 100), [
+                Image(self, '3qy4', (5, 0), True, True),
+                Image(self, '1aaad4', (55, 0), True, True),
+                Image(self, 'kf3s', (105, 0), True, True),
+                Image(self, '33256', (5, 60), True, True),
+                Text(self, 'L3I1l7', (55, 60), True, True),
+                TransparentImg(self, 'enyl1', (105, 60), True, True)
+            ], True, size=(200, 120))]
+            self.texts = [Text(self, 'readme', (500, 420), True)]
+            self.images = [LockImg(self, 'lock', (300, 400), True)]
+            self.etcs = []
+
+        elif self.map == 1:
+            self.directories = [Directory(self, 'dir', (500, 350), [
+                PadLock(self, 'AuthN', (5, 0), True, [[1, 0, 0], [0, 0, 1], [1, 1, 0]], True),
+                Directory(self, 'Auth', (55, 0), [
+                    Rotor(self, 'rotor', (5, 0), True, True),
+                    Text(self, 'align', (55, 0), True, True),
+                    Text(self, 'encoded', (105, 0), True, True),
+                    Image(self, 'calib', (155, 0), True, True)
+                ], True, True),
+            ], True, False, (200, 70))]
+            self.texts = []
+            self.images = [
+                InteractiveImg(self, 'clock', (620, 200), True),
+                Image(self, 'num', (170, 440), True),
+                InteractiveImg(self, 'moon', (105, 140), True),
+                PhaseImg(self, 'phase', (160, 75), True)
+            ]
+            self.etcs = [Log(self, 'log', (700, 420), False)]
+
+    def lockToOpen(self, lock_window=None):
+        if self.map == 0:
+            if lock_window is not None and lock_window.file.name == 'LTS':
+                self.asset['sfx/open'].play()
+                for directory in self.directories:
+                    if directory.name == 'sys': directory.interaction = True
+                lock_window.password = 0
+                return
+
+            drive = next((d for d in self.directories if d.name == 'DRIVE' and not d.interaction), None)
+            if not drive: return
+
+            if detectCover(self, ['1aaad4', 'enyl1'], 'image', (49, 45), (3, 3)):
+                self.asset['sfx/open'].play()
+                drive.interaction = True
+                old_lock = next((image for image in self.images if image.name == 'lock'), None)
+                pos = old_lock.window.rect.topleft if old_lock else (300, 400)
+                if old_lock: self.unregister_file(old_lock)
+                self.asset['image/lock'] = pygame.transform.scale(loadImg('lock.png', [1], 2, 1)[0], (55, 55))
+                lock = LockImg(self, 'lock', (300, 400), True)
+                lock.window.rect.topleft = pos
+                self.images.append(lock)
+                self.windows.append(lock.window)
+            else:
+                self.asset['sfx/locked'].play()
+
+        elif self.map == 1:
+            if lock_window is not None and lock_window.file.name == 'wire':
+                self.asset['sfx/open'].play()
+                for directory in self.directories:
+                    if directory.name == 'decrypt': directory.interaction = True
+                lock_window.password = 0
+
+    def download(self, file):
+        if self.map == 0:
+            if self.light:
+                if file.name == 'sysDownload':
+                    directory = next((d for d in self.directories if d.name == 'sys'), None)
+                    if directory:
+                        pos = directory.window.rect.topleft
+                        directory.files = [f for f in directory.files if f.name != 'sysDownload']
+                        for etc in self.etcs[:]:
+                            if etc.name == 'sysDownload': self.unregister_file(etc)
+                        directory.files.extend([
+                            PadLock(self, 'reboot', (0, 0), True, [[1, 0, 0, 1, 1, 0], [0, 1, 0, 1, 0, 0], [1, 0, 0, 0, 0, 0]], True),
+                            Text(self, '9o12', (50, 0), True, True),
+                            Text(self, '2nasHf', (100, 0), True, True)
+                        ])
+                        self.open_directory(directory, pos)
+                self.light = False
+            else:
+                self.light = True
+                pygame.mixer.stop()
+                self.asset['sfx/ominous'].play()
+                pygame.draw.rect(self.screen, '#000000', (0, 0, 900, 650))
+                pygame.display.update()
+                time.sleep(7)
+                self.map = 1
+                self.bgm_playing = False
+
+        elif self.map == 1:
+            if file.name == 'decrypt':
+                file.interaction = False
+                for window in self.windows:
+                    if hasattr(window, 'commands'):
+                        window.commands['decrypt'] = True
+                        self.asset['sfx/open'].play()
+
+    def padLockClear(self):
+        if self.map == 0:
+            self.windows.clear()
+            self.directories.clear()
+            self.images.clear()
+            self.texts.clear()
+            self.etcs.clear()
+
+            self.light = False
+            self.suppress_bgm = True
+            self.bgm_playing = False
+            self.bgm_channel.stop()
+
+            self.windows.append(SystemRebootWindow(None, self))
+
+        elif self.map == 1:
+            for etc in self.etcs:
+                if etc.name == 'log': etc.interaction = True
+
+    def makeHidden(self):
+        return Directory(self, '.hidden', (705, 60), [
+            CmdFile(self, 'cmd', (5, 0), True, True),
+            Text(self, 'cmd_note', (55, 0), True, True)
+        ], True, size=(100, 70))
+
+    def checkMoonClock(self):
+        moon = None; clock = None
+
+        for w in self.windows:
+            if not w.file: continue
+            if w.file.name == 'moon': moon = w.index
+            elif w.file.name == 'clock': clock = (w.hour, w.minute)
+
+        if moon == 3 and clock == (2, 40):
+            if any(directory.name == '.hidden' for directory in self.directories): return
+            self.asset['sfx/open'].play()
+            self.directories.append(self.makeHidden())
 
     def update_view_rect(self):
         win_w, win_h = self.display.get_size()
@@ -155,10 +349,10 @@ class Game:
 
     def main(self):
         while True:
-            if type(self.map) == int: self.loadmap(); self.map = (self.map, )#; self.asset['sfx/reboot'].play()
-            if self.map[0] == 0:
-                if not self.light: self.asset['Tx7y1'] = loadText('Tx7y1_.txt')
-            if self.map[0] == 1: self.checkMoonClock()
+            if self.loaded_map != self.map:
+                self.loadmap()
+                self.loaded_map = self.map
+            if self.map == 1: self.checkMoonClock()
 
             self.FPSCLOCK.tick(60)
             self.screen.fill((10, 15, 22))
@@ -174,14 +368,18 @@ class Game:
                     continue
 
                 event = self.to_game_event(event)
-                if self.dc(event): dc_pos = self.dc.pos
-                for wnd in reversed(self.windows): wnd.update(event)
 
-            for directory in self.directories: directory.update(dc_pos)
-            for image in self.images: image.update(dc_pos)
-            for text in self.texts: text.update(dc_pos)
-            for etc in self.etcs: etc.update(dc_pos)
-            for window in self.windows:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.focus_window_at(event.pos)
+
+                if self.dc(event): dc_pos = self.dc.pos
+                for wnd in reversed(self.windows[:]): wnd.update(event)
+
+            for directory in self.directories[:]: directory.update(dc_pos)
+            for image in self.images[:]: image.update(dc_pos)
+            for text in self.texts[:]: text.update(dc_pos)
+            for etc in self.etcs[:]: etc.update(dc_pos)
+            for window in self.windows[:]:
                 window.render()
                 window.tick(self.FPSCLOCK.get_time())
 
@@ -189,7 +387,6 @@ class Game:
 
             try:
                 open_crack = any(w.file.name == 'y6c20' for w in self.windows)
-
                 self.crack_loop.set_enabled(open_crack)
                 self.crack_loop.update()
             except AttributeError: pass
@@ -201,9 +398,10 @@ class Game:
                 self.bgm_channel.play(self.asset['sfx/bass'], loops=-1)
                 self.bgm_playing = True
 
-            self.screen.blit(self.asset['cursor'], self.to_game_pos(pygame.mouse.get_pos()))
+            self.screen.blit(self.asset['cursor'], self.mouse_pos())
             if not self.light: alphaRect(self.screen, (0, 0, 0, 170), (0, 0, *self.BASE_SIZE))
             self.present()
 
 
-Game().main()
+if __name__ == '__main__':
+    Game().main()

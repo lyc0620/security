@@ -1,3 +1,7 @@
-note:
+manual:
+help command shows the opened commands.
+
+scan restores hidden cache.
+
 some entries are not visible files.
-use cmd: open [entry]
+use open [entry] to cmd-only entries.
