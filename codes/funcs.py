@@ -1,5 +1,0 @@
-def lm(game): return game.loadmap()
-def lto(game): return game.lockToOpen()
-def dl(game, file): return game.download(file)
-def plc(game): return game.padLockClear()
-def cmc(game): return game.checkMoonClock()

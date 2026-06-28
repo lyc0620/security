@@ -122,11 +122,21 @@ class TxWindow(TextWindow):
     def current_text(self, game):
         return game.asset['txt/Tx7y1' if game.light else 'txt/Tx7y1_']
 
+    def sync_text(self):
+        if self.light == self.game.light: return
+        self.light = self.game.light
+        self.text = self.current_text(self.game)
+
     def update(self, event):
         super().update(event)
-        if self.light != self.game.light:
-            self.light = self.game.light
-            self.text = self.current_text(self.game)
+        self.sync_text()
+
+    def tick(self, dt):
+        self.sync_text()
+
+    def render(self):
+        self.sync_text()
+        super().render()
 
 class ImgWindow(Window):
     def __init__(self, file, game, size, img):
