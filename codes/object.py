@@ -410,16 +410,35 @@ class ClockWindow(Window):
         )
 
 class LockerWindow(Window):
-    def __init__(self, file, game, size, password):
+    def __init__(self, file, game, size, password, _max, initpt, initsz, initpd):
         super().__init__(file, game, size)
         self.password = password
         self.length = len(self.password)
         self.nums = [0 for _ in range(self.length)]
         self.inputPW = ''
+        self.initpt = initpt; self.initsz = initsz; self.initpd = initpd
+        self.max = _max
 
     @property
     def slot_rect(self):
-        return [pygame.Rect(self.rect.x + 20 + i * 52, self.rect.y + 20, 32, 64) for i in range(self.length)]
+        ptx = self.initpt[0]; pty = self.initpt[1]
+        szx = self.initsz[0]; szy = self.initsz[1]
+        pd = self.initpd
+        return [pygame.Rect(self.rect.x + ptx + i * (szx + pd), self.rect.y + pty, szx, szy) for i in range(self.length)]
+
+    def fit_text(self, text, rect, color=(10, 15, 22), margin=4):
+        surf = self.game.font3.render(text, True, color)
+
+        max_w = rect.w - margin * 2
+        max_h = rect.h - margin * 2
+
+        scale = min(max_w / surf.get_width(), max_h / surf.get_height())
+        new_size = (
+            int(surf.get_width() * scale),
+            int(surf.get_height() * scale)
+        )
+
+        return pygame.transform.smoothscale(surf, new_size)
 
     def update(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -440,7 +459,7 @@ class LockerWindow(Window):
                     self.game.windows.append(self)
             for i in range(self.length):
                 if self.slot_rect[i].collidepoint(event.pos):
-                    self.nums[i] = (self.nums[i] + 1) % 10
+                    self.nums[i] = (self.nums[i] + 1) % self.max
                     self.game.asset['sfx/tick'].play()
 
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -457,13 +476,28 @@ class LockerWindow(Window):
         self.inputPW = ''
 
     def render(self):
-        pygame.draw.rect(self.game.screen, CLR_BODY, self.rect)
-        pygame.draw.rect(self.game.screen, CLR_BORDER, (self.rect.x - 2, self.rect.y - 10, self.rect.w + 4, self.rect.h + 12), 2)
-        pygame.draw.rect(self.game.screen, CLR_BORDER, self.titlebar_rect)
-        pygame.draw.rect(self.game.screen, CLR_CLOSE, self.close_rect)
-        for i in range(self.length):
-            pygame.draw.rect(self.game.screen, '#FFFFFF', self.slot_rect[i])
-            self.game.screen.blit(self.game.font3.render(str(self.nums[i]), True, (10, 15, 22)), (self.slot_rect[i].x + 1, self.slot_rect[i].y + 3))
+        super().render()
+
+        for i, rect in enumerate(self.slot_rect):
+            pygame.draw.rect(self.game.screen, '#FFFFFF', rect)
+
+            text = self.fit_text(str(self.nums[i]), rect)
+            text_rect = text.get_rect(center=rect.center)
+
+            self.game.screen.blit(text, text_rect)
+class ImgLockerWindow(LockerWindow):
+    def __init__(self, file, game, size, password, img, _max, initpt, initsz, initpd):
+        super().__init__(file, game, size, password, _max, initpt, initsz, initpd)
+        self.img = img
+
+    def render(self):
+        Window.render(self)
+        self.game.screen.blit(self.img, self.rect)
+        for i, rect in enumerate(self.slot_rect):
+            text = self.fit_text(str(self.nums[i]), rect)
+            text_rect = text.get_rect(center=rect.center)
+
+            self.game.screen.blit(text, text_rect)
 
 class LoaderWindow(Window):
     def __init__(self, file, game, spd=(0, 3), comment=None, size=(100, 60)):
@@ -935,30 +969,19 @@ class CmdWindow(ConsoleWindow):
     def update(self, event):
         super().update(event)
 
-        if self not in self.game.windows:
-            return
+        if self not in self.game.windows: return
 
         self.boot()
 
-        if event.type != pygame.KEYDOWN:
-            return
-
-        if event.key == pygame.K_BACKSPACE:
-            self.input = self.input[:-1]
-            self.game.asset['sfx/tick'].play()
-
+        if event.type != pygame.KEYDOWN: return
+        if event.key == pygame.K_BACKSPACE: self.input = self.input[:-1]
         elif event.key == pygame.K_RETURN:
             command = self.input.strip()
             self.add_line('> ' + command)
             self.input = ''
             self.run_command(command)
-
-        elif event.key == pygame.K_ESCAPE:
-            self.input = ''
-
-        elif event.unicode and event.unicode.isprintable():
-            self.input += event.unicode
-            self.game.asset['sfx/tick'].play()
+        elif event.key == pygame.K_ESCAPE: self.input = ''
+        elif event.unicode and event.unicode.isprintable(): self.input += event.unicode
 
     def render(self):
         super().render()
@@ -1023,7 +1046,7 @@ class CmdWindow(ConsoleWindow):
     def open_sig_dir(self):
         if getattr(self, 'sig_dir', None) is None:
             self.sig_dir = Directory(self.game, '.sig', (320, 240), [
-                Text(self.game, '.cache', (5, 0), True, True),
+                ImgLocker(self.game, 'wire', (5, 0), '100', 2, (56, 47), (21, 30), 9, 1)
             ], True, True, (130, 70))
 
         self.open_virtual_dir(self.sig_dir)
@@ -1277,14 +1300,25 @@ class PhaseImg(Image):
         self.window = PhaseWindow(self, self.game, self.size, self.image)
 
 class Locker(File):
-    def __init__(self, game, name, pos, password, interaction, child=False):
+    def __init__(self, game, name, pos, password, interaction, child=False, _max=10, initpt=(20, 20), initsz=(32, 64), initpd=20):
         self.game = game
         self.name = name
         self.password = password
         self.length = len(self.password)
         self.size = (52 * self.length + 20, 104)
         super().__init__(game, name, pos, 'locker', interaction, self.size, child)
-        self.window = LockerWindow(self, self.game, self.size, self.password)
+        self.window = LockerWindow(self, self.game, self.size, self.password, _max, initpt, initsz, initpd)
+class ImgLocker(File):
+    def __init__(self, game, name, pos, password, _max, initpt, initsz, initpd, interaction, child=False):
+        self.game = game
+        self.name = name
+        self.password = password
+        self.length = len(self.password)
+        self.image = self.game.asset['image/' + self.name]
+        try: size = self.image.get_size()
+        except AttributeError: size = self.image[0].get_size()
+        super().__init__(game, name, pos, 'locker', interaction, size, child)
+        self.window = ImgLockerWindow(self, self.game, size, self.password, self.image, _max, initpt, initsz, initpd)
 
 class Sys(File):
     def __init__(self, game, name, pos, interaction, child = False):

@@ -54,14 +54,6 @@ def lm(game):
                 Text(game, 'align', (55, 0), True, True),
                 Text(game, 'encoded', (105, 0), True, True),
                 Image(game, 'calib', (155, 0), True, True)
-                # Image(game, 'light0', (5, 0), True, True),
-                # Image(game, 'light1', (55, 0), True, True),
-                # Image(game, 'light2', (105, 0), True, True),
-                # Image(game, 'light3', (155, 0), True, True),
-                # Image(game, 'light4', (5, 60), True, True),
-                # Image(game, 'light5', (55, 60), True, True),
-                # Image(game, 'light6', (105, 60), True, True),
-                # Image(game, 'light7', (155, 60), True, True),
             ], True, True),
         ], True, False, (200, 70))]
         game.texts = []

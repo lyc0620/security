@@ -59,6 +59,7 @@ class Game:
             'image/phase': loadImg('moon.png', range(6), 2, 3),
             'image/calib': pygame.image.load('asset/img/calib.png'),
             'image/num': pygame.image.load('asset/img/num.png'),
+            'image/wire': pygame.image.load('asset/img/wire.png'),
 
             'sfx/locked': pygame.mixer.Sound('asset/sfx/locked.wav'),
             'sfx/open': pygame.mixer.Sound('asset/sfx/open.wav'),
@@ -73,8 +74,6 @@ class Game:
         self.asset['sfx/bass'].set_volume(0.25)
         self.asset['sfx/c'].set_volume(0.5)
         self.asset['sfx/tick'].set_volume(0.05)
-        for i in range(len(loadImgs('wire'))):
-            self.asset['image/light' + str(i)] = loadImgs('wire')[i]
 
         self.crack_channels = [pygame.mixer.Channel(i) for i in range(2, 17)]
         self.crack_loop = LayeredLooper(self.asset['sfx/crack'], self.crack_channels, interval_ms=1500, fade_ms=150)
