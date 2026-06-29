@@ -1,6 +1,6 @@
 import pygame
 
-from codes.util import loadImg, loadText
+from codes.util import loadImg, loadText, loadImgs
 
 
 def load_assets():
@@ -27,7 +27,9 @@ def load_assets():
         'txt/encoded': loadText('encoded.txt'),
         'txt/cmd_note': loadText('cmd_note.txt'),
         'txt/.cache': loadText('cache.txt'),
-        'txt/decrypt_note.txt': loadText('decrypt_note.txt'),
+        'txt/decrypt_note': loadText('decrypt_note.txt'),
+        'txt/key_note': loadText('key_note.txt'),
+        'txt/access_note': loadText('access_note.txt'),
 
         'image/lock': pygame.transform.scale(loadImg('lock.png', [0], 2, 1)[0], (55, 55)),
         'image/1aaad4': pygame.image.load('asset/img/1aaad4.png'),
@@ -47,7 +49,8 @@ def load_assets():
         'image/phase': loadImg('moon.png', range(6), 2, 3),
         'image/calib': pygame.image.load('asset/img/calib.png'),
         'image/num': pygame.image.load('asset/img/num.png'),
-        'image/wire': pygame.image.load('asset/img/wire.png'),
+        'image/sig_wire': pygame.image.load('asset/img/sig_wire.png'),
+        'image/key_wire': pygame.image.load('asset/img/key_wire.png'),
 
         'sfx/locked': pygame.mixer.Sound('asset/sfx/locked.wav'),
         'sfx/open': pygame.mixer.Sound('asset/sfx/open.wav'),
@@ -58,10 +61,14 @@ def load_assets():
         'sfx/ominous': pygame.mixer.Sound('asset/sfx/ominous.wav'),
         'sfx/reboot': pygame.mixer.Sound('asset/sfx/reboot.wav'),
     }
+
     asset['lock'].set_alpha(185)
     asset['sfx/bass'].set_volume(0.25)
     asset['sfx/c'].set_volume(0.5)
     asset['sfx/tick'].set_volume(0.05)
+
+    for i in range(len(loadImgs('wire'))): asset['image/wire' + str(i)] = loadImgs('wire')[i]
+
     return asset
 
 

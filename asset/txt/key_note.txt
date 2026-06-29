@@ -1,0 +1,2 @@
+use AUTHKEY.exe to download the authorisation key
+you can use the file name as the key for decryption

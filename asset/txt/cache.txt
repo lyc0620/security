@@ -10,7 +10,7 @@ access: cmd only
 
 entry_02:
 name: .key
-type: verifier
+type: auth key
 access: cmd only
 
 entry_03:

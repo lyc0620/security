@@ -313,7 +313,7 @@ class ClockWindow(Window):
 
         for num, pos in [('12', 0), ('3', 3), ('6', 6), ('9', 9)]:
             angle = math.radians(pos * 30 - 90)
-            text = self.game.font2.render(num, True, CLR_DARK)
+            text = self.game.font2.render(num, True, CLR_BORDER)
             tx = cx + math.cos(angle) * (radius - 24) - text.get_width() // 2
             ty = cy + math.sin(angle) * (radius - 24) - text.get_height() // 2
             self.game.screen.blit(text, (tx, ty))
@@ -878,14 +878,14 @@ class CmdWindow(ConsoleWindow):
         super().__init__(file, game, size=(360, 220), max_lines=240)
         self.input = ''
         self.booted = False
-        self.commands = {
-            'help': True,
-            'status': True,
-            'scan': True,
-            'open': True,
-            'decrypt': False,
-            'access': False
-        }
+        self.commands = self.game.commands
+        self.sig_dir = None
+        self.key_dir = None
+        self.ptr_dir = None
+        self.access_elapsed = 0
+        self.access_step = -1
+        self.dont_elapsed = 0
+        self.dont_tick = 0
 
     def boot(self):
         if self.booted: return
@@ -907,6 +907,7 @@ class CmdWindow(ConsoleWindow):
         self.boot()
 
         if event.type != pygame.KEYDOWN or not self.game.is_active_window(self): return
+        if self.access_step != -1: return
         if event.key == pygame.K_BACKSPACE: self.input = self.input[:-1]
         elif event.key == pygame.K_RETURN:
             command = self.input.strip()
@@ -915,6 +916,78 @@ class CmdWindow(ConsoleWindow):
             self.run_command(command)
         elif event.key == pygame.K_ESCAPE: self.input = ''
         elif event.unicode and event.unicode.isprintable(): self.input += event.unicode
+
+    def tick(self, dt):
+        if self.access_step == -1: return
+
+        self.access_elapsed += dt
+
+        if self.access_step == 0 and self.access_elapsed >= 850:
+            self.add_line('ROOT channel opened.')
+            self.add_line('authority: ROOT')
+            self.add_line('session privilege escalated.')
+            self.add_line('')
+            self.game.asset['sfx/open'].play()
+            self.access_step = 1
+            self.access_elapsed = 0
+            return
+
+        if self.access_step == 1 and self.access_elapsed >= 1050:
+            self.add_line('WARNING: non-user process attached.')
+            self.add_line('WARNING: session authority unstable.')
+            self.add_line('WARNING: root channel is not empty.')
+            self.add_line('')
+            self.game.asset['sfx/locked'].play()
+            self.access_step = 2
+            self.access_elapsed = 0
+            return
+
+        if self.access_step == 2 and self.access_elapsed >= 1200:
+            self.game.light = False
+            self.access_step = 3
+            self.access_elapsed = 0
+            return
+
+        if self.access_step == 3 and self.access_elapsed >= 1700:
+            self.add_line('REQUEST DETECTED')
+            self.add_line('')
+            self.game.asset['sfx/tick'].play()
+            self.access_step = 4
+            self.access_elapsed = 0
+            return
+
+        if self.access_step == 4 and self.access_elapsed >= 900:
+            self.access_step = 5
+            self.access_elapsed = 0
+            self.dont_elapsed = 0
+            self.dont_tick = 0
+            return
+
+        if self.access_step == 5:
+            self.dont_elapsed += dt
+            self.dont_tick += dt
+
+            while self.dont_tick >= 70 and self.dont_elapsed <= 3000:
+                self.dont_tick -= 70
+                self.add_line('REQUEST DENIED')
+                self.game.asset['sfx/tick'].play()
+
+            if self.dont_elapsed >= 3000:
+                self.access_step = 6
+                self.access_elapsed = 0
+                self.dont_elapsed = 0
+                self.dont_tick = 0
+                self.add_line('')
+            return
+
+        if self.access_step == 6 and self.access_elapsed >= 1200:
+            self.add_line('REQUEST ACCEPTED')
+            self.game.asset['sfx/locked'].play()
+            self.add_line('')
+            self.access_step = -1
+            self.access_elapsed = 0
+            self.dont_elapsed = 0
+            self.dont_tick = 0
 
     def render(self):
         super().render()
@@ -974,21 +1047,20 @@ class CmdWindow(ConsoleWindow):
 
         target = args[0].lower()
 
-        if target == '.sig':
-            self.open_sig_dir()
-            return
+        if target == '.sig': self.open_sig_dir(); return
+        elif target == '.key': self.open_key_dir(); return
 
         self.add_line(target + ': entry not found')
 
     def open_sig_dir(self):
         from codes.file import Directory, ImgLocker, Sys, Text
 
-        if getattr(self, 'sig_dir', None) is None:
+        if self.sig_dir is None:
             self.sig_dir = Directory(self.game, '.sig', (320, 240), [
-                ImgLocker(self.game, 'wire', (5, 0), '101', 2, (56, 47), (21, 30), 9, True),
+                ImgLocker(self.game, 'sig_wire', (5, 0), '101', 2, (56, 47), (21, 30), 9, True),
                 Directory(self.game, 'decrypt', (55, 0), [
                     Sys(self.game, 'decrypt', (5, 0), True, True),
-                    Text(self.game, 'decrypt_note.txt', (55, 0), True, True),
+                    Text(self.game, 'decrypt_note', (55, 0), True, True),
                 ], False, True)
             ], True, True, (130, 70))
 
@@ -996,11 +1068,13 @@ class CmdWindow(ConsoleWindow):
         self.add_line('opening hidden directory: .sig')
 
     def open_key_dir(self):
-        from codes.file import Directory, Text
+        from codes.file import Directory, Text, Sys, ImgLocker
 
-        if getattr(self, 'key_dir', None) is None:
-            self.key_dir = Directory(self.game, '.sig', (320, 240), [
-                Text(self.game, '.cache', (5, 0), True, True),
+        if self.key_dir is None:
+            self.key_dir = Directory(self.game, '.key', (320, 240), [
+                Sys(self.game, 'AUTHKEY', (5, 0), False, True),
+                Text(self.game, 'key_note', (55, 0), True, True),
+                ImgLocker(self.game, 'key_wire', (105, 0), '10100', 2, (54, 47), (21, 30), 9, True, True),
             ], True, True, (130, 70))
 
         self.open_virtual_dir(self.key_dir)
@@ -1010,6 +1084,21 @@ class CmdWindow(ConsoleWindow):
         self.game.open_virtual_dir(directory)
 
     def cmd_help(self, args):
+        self.add_line('help: show instructions for the commands')
+        self.add_line('status: show current session state')
+        self.add_line('scan: scan hidden cache entries')
+        self.add_line('open [entry]: open readable hidden entry')
+        self.add_line('decrypt [entry] [key]: restore encrypted entry')
+        self.add_line('access [target] [pointer] [password]: access protected system target')
+
+    def cmd_status(self, args):
+        cache_found = self.cache_exists()
+        self.add_line('authority: partial')
+        self.add_line('visible index: corrupted')
+        self.add_line('hidden index: {}'.format('loaded' if cache_found else 'unavailable'))
+        self.add_line('cache: {}'.format('recovered' if cache_found else 'missing'))
+        self.add_line('')
+
         self.add_line('available commands:')
         for name, opened in self.commands.items():
             if opened: self.add_line(name)
@@ -1018,15 +1107,6 @@ class CmdWindow(ConsoleWindow):
         self.add_line('locked commands:')
         for name, opened in self.commands.items():
             if not opened: self.add_line(name)
-
-    def cmd_status(self, args):
-        cache_found = self.cache_exists()
-        self.add_line('authority: partial')
-        self.add_line('visible index: corrupted')
-        self.add_line('hidden index: {}'.format('loaded' if cache_found else 'unavailable'))
-        self.add_line('cache: {}'.format('recovered' if cache_found else 'missing'))
-        self.add_line('decrypt: {}'.format('available' if self.commands['decrypt'] else 'locked'))
-        self.add_line('access: {}'.format('available' if self.commands['access'] else 'locked'))
 
     def cmd_scan(self, args):
         if self.cache_exists():
@@ -1059,10 +1139,85 @@ class CmdWindow(ConsoleWindow):
         self.game.asset['sfx/open'].play()
 
     def cmd_decrypt(self, args):
-        self.add_line('decrypt module incomplete')
+        if not self.game.commands['decrypt']:
+            self.add_line('decrypt module incomplete')
+            return
+
+        if len(args) < 2:
+            self.add_line('usage: decrypt [entry] [key]')
+            return
+
+        target, key = (arg.lower() for arg in args[:2])
+
+        if target != '.ptr':
+            self.add_line('decrypt failed.')
+            self.add_line('unencrypted file.')
+            return
+
+        if key != '.auth42.exe':
+            self.add_line('decrypt failed.')
+            self.add_line('wrong key.')
+            return
+
+        if not self.game.auth_key:
+            self.add_line('decrypt failed.')
+            self.add_line('key not verified.')
+            return
+
+        if self.game.ptr_decrypted:
+            self.add_line('.ptr already decrypted.')
+            self.add_line('pointer: ROOT')
+            return
+
+        self.game.ptr_decrypted = True
+        self.add_line('decrypting .ptr with .auth42.exe...')
+        self.add_line('.ptr decrypted.')
+        self.add_line('pointer restored: ROOT')
+        self.game.asset['sfx/open'].play()
 
     def cmd_access(self, args):
-        self.add_line('access module incomplete')
+        if not self.game.commands['access']:
+            self.add_line('access module incomplete')
+            return
+
+        if len(args) < 3:
+            self.add_line('usage: access [target] [pointer] [auth password]')
+            return
+
+        target, pointer, password = (arg.lower() for arg in args[:3])
+
+        if target != 'root':
+            self.add_line('access failed.')
+            self.add_line('unknown target.')
+            return
+
+        if pointer != '.ptr':
+            self.add_line('access failed.')
+            self.add_line('unknown pointer.')
+            return
+
+        if not self.game.ptr_decrypted:
+            self.add_line('access failed.')
+            self.add_line('pointer encrypted.')
+            return
+
+        if password != '468042':
+            self.add_line('access failed.')
+            self.add_line('wrong password.')
+            return
+
+        if self.access_step != -1:
+            self.add_line('access sequence already running.')
+            return
+
+        self.add_line('access request accepted.')
+        self.add_line('target: ROOT')
+        self.add_line('pointer: .ptr')
+        self.add_line('auth password verified.')
+        self.add_line('opening protected channel...')
+        self.access_elapsed = 0
+        self.access_step = 0
+        self.game.asset['sfx/tick'].play()
 
     def hidden_dir(self):
         return next((d for d in self.game.directories if d.name == '.hidden'), None)

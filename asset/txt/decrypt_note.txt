@@ -1,1 +1,3 @@
-decrypt
+manual:
+decrypt [entry] [key] to decrypt
+restore encrypted entry using verified key

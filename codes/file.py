@@ -207,7 +207,22 @@ class Log(File):
   super().__init__(game, name, pos, 'sys', interaction, (360, 220), child)
   self.window = LogWindow(self, self.game)
 
-class CmdFile(File):
+class Cmd(File):
     def __init__(self, game, name, pos, interaction, child=False):
         super().__init__(game, name, pos, 'sys', interaction, (360, 220), child)
         self.window = CmdWindow(self, self.game)
+
+class Dummy(File):
+    def __init__(self, game, name, pos, child=False):
+        super().__init__(game, name, pos, 'sys', False, child=child)
+
+    def render(self, clr='#FFFFFF'):
+        self.game.screen.blit(self.icon, self.pos)
+        lines = wrap_label(self.game.font, self.display_name)
+        line_h = self.game.font.get_height() + LABEL_LINE_GAP
+        for i, line in enumerate(lines):
+            text = self.game.font.render(line, False, clr)
+            w = self.game.font.size(line)[0]
+            x = self.pos[0] + ICON_SIZE // 2 - w // 2
+            y = self.pos[1] + ICON_SIZE - 2 + i * line_h
+            self.game.screen.blit(text, (x, y))

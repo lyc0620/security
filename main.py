@@ -1,11 +1,12 @@
 import sys
-import time
 
 import pygame
 
 from codes.assets import load_assets, load_fonts
 from codes.file import (
-    CmdFile,
+    Cmd,
+    Dummy,
+    ImgLocker,
     Directory,
     Image,
     InteractiveImg,
@@ -53,6 +54,29 @@ class Game:
         self.bgm_channel = pygame.mixer.Channel(1)
         self.bgm_playing = False
         self.suppress_bgm = False
+        # self.commands = {
+        #     'help': True,
+        #     'status': True,
+        #     'scan': True,
+        #     'open': True,
+        #     'decrypt': False,
+        #     'access': False
+        # }
+        #
+        # self.auth_key = False
+        # self.ptr_decrypted = False
+
+        self.commands = {
+            'help': True,
+            'status': True,
+            'scan': True,
+            'open': True,
+            'decrypt': True,
+            'access': True
+        }
+
+        self.auth_key = True
+        self.ptr_decrypted = True
 
         self.directories = []
         self.images = []
@@ -60,7 +84,7 @@ class Game:
         self.etcs = []
         self.windows = []
 
-        self.map = 0
+        self.map = 1
         self.loaded_map = None
         self.light = True
         self.console = None
@@ -226,11 +250,22 @@ class Game:
                 self.asset['sfx/locked'].play()
 
         elif self.map == 1:
-            if lock_window is not None and lock_window.file.name == 'wire':
-                self.asset['sfx/open'].play()
-                for directory in self.directories:
-                    if directory.name == 'decrypt': directory.interaction = True
-                lock_window.password = 0
+            if lock_window is not None:
+                if lock_window.file.name == 'sig_wire':
+                    self.asset['sfx/open'].play()
+                    for directory in self.directories:
+                        if directory.name == 'decrypt': directory.interaction = True
+                    lock_window.password = 0
+                elif lock_window.file.name == 'key_wire':
+                    self.asset['sfx/open'].play()
+                    for etc in self.etcs:
+                        if etc.name == 'AUTHKEY': etc.interaction = True
+                    lock_window.password = 0
+                elif lock_window.file.name == 'wire7':
+                    self.asset['sfx/open'].play()
+                    for etc in self.etcs:
+                        if etc.name == 'access': etc.interaction = True
+                    lock_window.password = 0
 
     def download(self, file):
         if self.map == 0:
@@ -249,23 +284,18 @@ class Game:
                         ])
                         self.open_directory(directory, pos)
                 self.light = False
-            else:
-                self.light = True
-                pygame.mixer.stop()
-                self.asset['sfx/ominous'].play()
-                pygame.draw.rect(self.screen, '#000000', (0, 0, 900, 650))
-                pygame.display.update()
-                time.sleep(7)
-                self.map = 1
-                self.bgm_playing = False
-
         elif self.map == 1:
             if file.name == 'decrypt':
                 file.interaction = False
-                for window in self.windows:
-                    if hasattr(window, 'commands'):
-                        window.commands['decrypt'] = True
-                        self.asset['sfx/open'].play()
+                self.commands['decrypt'] = True
+                self.asset['sfx/open'].play()
+            elif file.name == 'AUTHKEY':
+                file.interaction = False
+                self.auth_key = True
+                self.asset['sfx/open'].play()
+            elif file.name == 'access':
+                self.commands['access'] = True
+                self.asset['sfx/open'].play()
 
     def padLockClear(self):
         if self.map == 0:
@@ -288,7 +318,7 @@ class Game:
 
     def makeHidden(self):
         return Directory(self, '.hidden', (705, 60), [
-            CmdFile(self, 'cmd', (5, 0), True, True),
+            Cmd(self, 'cmd', (5, 0), True, True),
             Text(self, 'cmd_note', (55, 0), True, True)
         ], True, size=(100, 70))
 
@@ -352,7 +382,19 @@ class Game:
             if self.loaded_map != self.map:
                 self.loadmap()
                 self.loaded_map = self.map
-            if self.map == 1: self.checkMoonClock()
+            if self.map == 1:
+                self.checkMoonClock()
+                if self.auth_key and not any(etc.name == '.auth42' for etc in self.etcs):
+                    self.etcs.append(Dummy(self, '.auth42', (400, 400)))
+                if self.ptr_decrypted and not any(directory.name == 'access' for directory in self.directories):
+                    self.directories.append(Directory(self, 'access', (350, 400), [
+                        Text(self, 'access_note', (5, 0), True, True),
+                        Directory(self, 'wire', (55, 0),
+                                  list(Image(self, 'wire{}'.format(i), (5 + i % 4 * 50, i // 4 * 60), True, True) for i in range(7)) +
+                                  [ImgLocker(self, 'wire7', (155, 60), '11010', 2, (9, 7), (21, 30), 9, True, True)],
+                                  True, True),
+                        Sys(self, 'access', (105, 0), False, True)
+                    ], True))
 
             self.FPSCLOCK.tick(60)
             self.screen.fill((10, 15, 22))
